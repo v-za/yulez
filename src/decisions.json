@@ -1,0 +1,51 @@
+{
+  "decision": "Intro direction",
+  "question": "How does the site open?",
+  "options": [
+    {
+      "label": "Cinematic",
+      "file": "01-cinematic.html",
+      "note": "depth-zoom hero, name stamps in red"
+    },
+    {
+      "label": "Titles",
+      "file": "02-titles.html",
+      "note": "film-reel boot, name resolves from blur"
+    },
+    {
+      "label": "Monument",
+      "file": "03-monument.html",
+      "note": "reel behind giant glass name",
+      "state": "chosen",
+      "next": {
+        "decision": "Typeface",
+        "question": "Which face carries the name?",
+        "options": [
+          {
+            "label": "Archivo Black",
+            "file": "03-monument.html",
+            "note": "wide grotesque \u2014 the original"
+          },
+          {
+            "label": "Anton",
+            "file": "04-monument-anton.html",
+            "note": "condensed industrial \u2014 FIRST RUN energy",
+            "state": "leaning",
+            "next": {
+              "decision": "Work index",
+              "question": "Year covers, reflection treatment",
+              "options": [
+                {
+                  "label": "Reflection cover",
+                  "file": "05-covers.html",
+                  "note": "scroll below the hero \u2014 2026 lives inside the image",
+                  "state": "leaning"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

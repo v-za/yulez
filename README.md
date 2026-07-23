@@ -13,7 +13,8 @@ repo root is always the currently promoted one (`MAIN` in `src/build.py`).
 ## Variants
 
 - **01 — cinematic** — depth-map WebGL hero with a 4s pull-back intro, cursor-reactive 3D parallax, chromatic aberration, barrel-lens curve, drifting light-leak, film grain.
-- **02 — titles** — movie-title-sequence opening: a film reel of photos and wide-tracked type cards whips past with step-printed motion ghosts and glides down under friction over ~5s — every frame clearer than the last — until the strip stills on the hero. The name resolves out of the same blur, driven by reel velocity (Bellantoni, *Type in Motion*). Click or key skips it.
+- **02 — titles** — movie-title-sequence opening: a film reel of photos and wide-tracked type cards whips past with step-printed motion ghosts and glides down under friction over ~6s — every frame clearer than the last — until the strip stills on the hero, which then breathes into depth (dimensional arrival). The name resolves out of the same blur, driven by reel velocity (Bellantoni, *Type in Motion*). Click or key skips it.
+- **03 — monument** — the reel runs full-bleed from frame one with giant stacked YULISSA/BENITEZ type overlaid as translucent dark glass — the blur storm visible through and around the letterforms; as the strip slows the name fades away, handing the frame to the finished still. Nameless at rest, no marquee.
 
 Shared across variants: the Archivo Black name treatment (the **A** carries a star in its counter, revealed with a left-to-right shutter-blur), full-bleed masonry gallery with lightbox, inertia scroll, custom cursor, scroll-progress bar; graceful degradation on touch, no-WebGL, and `prefers-reduced-motion`.
 

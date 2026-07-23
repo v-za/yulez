@@ -1,0 +1,271 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yulez — type test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Anton&family=Bebas+Neue&family=Big+Shoulders+Display:wght@900&family=Archivo:wdth,wght@125,900&family=Syne:wght@800&family=Staatliches&family=Dela+Gothic+One&family=Saira+Condensed:wght@900&family=Six+Caps&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#0b0b0e; --ink-2:#101014;
+    --bone:#f5efe6; --red:#ff2116;
+    --line:rgba(240,232,220,.11);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    /* live-tuned by the control bar */
+    --size:13.5;      /* vw */
+    --track:.005;     /* em */
+    --lh:.84;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--bone);
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+
+  /* film grain, same as the real site, so contrast reads honestly */
+  body::before{content:"";position:fixed;inset:0;z-index:600;pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
+    opacity:.05;mix-blend-mode:screen}
+
+  /* ---------- control bar ---------- */
+  #bar{position:sticky;top:0;z-index:500;background:rgba(10,10,13,.94);
+    backdrop-filter:blur(14px);border-bottom:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:18px 26px;align-items:center;
+    padding:12px clamp(14px,3vw,28px);font-family:var(--mono);font-size:.66rem;
+    letter-spacing:.1em;text-transform:uppercase}
+  #bar .grp{display:flex;align-items:center;gap:9px}
+  #bar label{opacity:.5;white-space:nowrap}
+  #bar output{color:var(--red);min-width:3.4em;display:inline-block}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:106px;height:2px;
+    background:rgba(245,239,230,.2);outline:0}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:11px;height:11px;
+    border-radius:50%;background:var(--red);cursor:pointer}
+  #bar select,#bar input[type=text]{background:#16161b;color:var(--bone);border:1px solid var(--line);
+    padding:5px 8px;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase}
+  #bar input[type=text]{width:190px;text-transform:none;letter-spacing:.04em}
+  .btn{background:none;border:1px solid var(--line);color:var(--bone);cursor:pointer;
+    padding:5px 11px;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase}
+  .btn:hover{border-color:var(--red);color:var(--red)}
+  .btn.on{background:var(--red);border-color:var(--red);color:var(--ink)}
+  .hint{opacity:.32;font-size:.6rem;letter-spacing:.08em;margin-left:auto}
+
+  /* ---------- specimen panels ---------- */
+  .panel{position:relative;border-bottom:1px solid var(--line);overflow:hidden;
+    padding:clamp(30px,5vw,64px) clamp(16px,4vw,54px) clamp(26px,4vw,52px)}
+  .panel .bg{position:absolute;inset:0;z-index:0;background-size:cover;
+    background-position:68% center;opacity:0;transition:opacity .3s}
+  body.photo .panel .bg{opacity:1}
+  /* the real hero's two-layer scrim — keeps the legibility test honest */
+  .panel .scrim{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .3s;
+    background:radial-gradient(130% 105% at 62% 44%,transparent 46%,rgba(5,5,8,.62) 100%),
+      linear-gradient(to top,rgba(8,8,10,.86) 0%,rgba(8,8,10,.08) 30%,transparent 55%)}
+  body.photo .panel .scrim{opacity:1}
+
+  .meta{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+    margin-bottom:clamp(14px,2.4vw,30px)}
+  .meta .n{color:var(--red);font-weight:700}
+  .meta .fam{opacity:.92}
+  .meta .src{opacity:.36;text-transform:none;letter-spacing:.06em}
+  .meta .cost{border:1px solid var(--line);padding:2px 7px;opacity:.55;font-size:.56rem}
+  .meta .cost.paid{color:var(--red);border-color:rgba(255,33,22,.5);opacity:1}
+
+  .lockup{position:relative;z-index:3;margin:0;text-transform:uppercase;
+    font-size:calc(var(--size) * 1vw);
+    line-height:var(--lh);
+    letter-spacing:calc(var(--track) * 1em);
+    color:var(--red);
+    text-shadow:0 2px 18px rgba(0,0,0,.4);
+    word-break:break-word}
+  .lockup span{display:block}
+  body.invert .lockup{color:var(--bone)}
+  body.invert .panel{background:var(--ink-2)}
+
+  .rule{position:relative;z-index:3;height:2px;width:min(320px,58vw);background:var(--red);
+    opacity:.9;margin-top:clamp(14px,2.2vw,26px)}
+
+  /* per-panel faces */
+  .f1 .lockup{font-family:"Archivo Black",sans-serif}
+  .f2 .lockup{font-family:"Anton",sans-serif}
+  .f3 .lockup{font-family:"Bebas Neue",sans-serif}
+  .f4 .lockup{font-family:"Big Shoulders Display",sans-serif;font-weight:900}
+  /* Google serves the wdth axis as a font-stretch descriptor — must match to select it */
+  .f5 .lockup{font-family:"Archivo",sans-serif;font-weight:900;font-stretch:125%;
+    font-variation-settings:"wdth" 125}
+  .f6 .lockup{font-family:"Syne",sans-serif;font-weight:800}
+  .f7 .lockup{font-family:"Anton",sans-serif;letter-spacing:-.015em !important;transform:scaleY(1.18);transform-origin:left bottom}
+  .f8 .lockup{font-family:"Staatliches",sans-serif}
+  .f9 .lockup{font-family:"Dela Gothic One",sans-serif}
+  .f10 .lockup{font-family:"Saira Condensed",sans-serif;font-weight:900;transform:scaleY(1.12);transform-origin:left bottom}
+
+  /* photo-through-the-letters, like the FIRST RUN reference */
+  body.cutout .lockup{background-image:var(--cut,none);background-size:cover;background-position:center;
+    -webkit-background-clip:text;background-clip:text;color:transparent !important;
+    filter:contrast(1.15) saturate(1.1);text-shadow:none}
+  body.cutout.photo .panel .bg{opacity:.25}
+
+  /* monument mode — variant 03's giant dark-glass name, centered, filling the frame */
+  body.monument .panel{display:flex;flex-direction:column;min-height:86svh;justify-content:center}
+  body.monument .panel .meta{position:absolute;top:clamp(14px,2.4vw,26px);left:clamp(16px,4vw,54px);right:clamp(16px,4vw,54px);margin:0}
+  body.monument .panel .bg{opacity:1}
+  /* the milky veil sits over the photo; the letters punch through as darker glass */
+  body.monument .panel .scrim{opacity:1;
+    background:linear-gradient(rgba(237,231,222,.16),rgba(237,231,222,.16)),
+      radial-gradient(130% 105% at 62% 44%,transparent 46%,rgba(5,5,8,.5) 100%)}
+  body.monument .lockup{text-align:center;letter-spacing:0 !important;line-height:.8;
+    color:rgba(8,8,11,.52);text-shadow:none}
+  body.monument .rule{display:none}
+  body.monument.cutout .lockup{color:transparent !important;
+    filter:contrast(1.2) saturate(1.05) brightness(.72)}
+  body.monument.solo .panel.active{display:flex !important}
+  body.monument.solo .panel.active .lockup{position:static;left:auto;bottom:auto}
+
+  /* ---------- solo mode: exact hero geometry ---------- */
+  body.solo .panel{display:none}
+  body.solo .panel.active{display:block;position:fixed;inset:0;z-index:400;
+    height:100svh;padding:0;border:0}
+  body.solo .panel.active .meta{position:absolute;top:clamp(14px,3vw,28px);left:clamp(16px,4vw,54px);
+    z-index:5;margin:0}
+  /* mirrors .name / .rule in portfolio_tpl.html */
+  body.solo .panel.active .lockup{position:absolute;left:clamp(16px,4vw,54px);
+    bottom:clamp(22px,4.6vh,54px);z-index:4;
+    font-size:clamp(3rem,calc(var(--size) * 1vw),11rem)}
+  body.solo .panel.active .rule{position:absolute;left:clamp(18px,4vw,56px);
+    bottom:clamp(10px,2.4vh,26px);z-index:4;margin:0}
+  #solohint{display:none;position:fixed;bottom:clamp(14px,3vw,26px);right:clamp(16px,4vw,54px);
+    z-index:500;font-family:var(--mono);font-size:.62rem;letter-spacing:.16em;
+    text-transform:uppercase;color:rgba(245,239,230,.45)}
+  body.solo #solohint{display:block}
+  body.solo #bar{display:none}
+</style>
+
+<div id="bar">
+  <div class="grp"><label>Size</label>
+    <input type="range" id="size" min="4" max="20" step=".1" value="13.5"><output id="sizeV"></output></div>
+  <div class="grp"><label>Track</label>
+    <input type="range" id="track" min="-.06" max=".14" step=".002" value=".005"><output id="trackV"></output></div>
+  <div class="grp"><label>Leading</label>
+    <input type="range" id="lh" min=".7" max="1.15" step=".01" value=".84"><output id="lhV"></output></div>
+  <div class="grp"><label>Photo</label>
+    <select id="bg">
+      <option value="">none</option>
+      <option value="typetest-tulle.jpg" selected>tulle (real hero)</option>
+      <option value="typetest-warehouse.jpg">warehouse</option>
+      <option value="typetest-band.jpg">band</option>
+      <option value="typetest-bw.jpg">b&amp;w</option>
+    </select></div>
+  <div class="grp"><button class="btn on" id="photoBtn">bg on</button>
+    <button class="btn" id="invBtn">bone</button>
+    <button class="btn" id="cutBtn">cutout</button>
+    <button class="btn" id="monBtn">monument</button></div>
+  <div class="grp"><label>Text</label><input type="text" id="txt" value="Yulissa / Benitez"></div>
+  <div class="hint">1–9, 0 solo · esc back · “/” splits the line</div>
+</div>
+
+<div id="stage"></div>
+<div id="solohint">esc — back to all</div>
+
+<script>
+const FONTS = [
+  {cls:'f1', fam:'Archivo Black',         src:'Google Fonts · Omnibus-Type · SIL OFL',            cost:'free', note:'current — the control'},
+  {cls:'f2', fam:'Anton',                 src:'Google Fonts · Vernon Adams · SIL OFL',            cost:'free', note:'condensed poster weight'},
+  {cls:'f3', fam:'Bebas Neue',            src:'Google Fonts · Dharma Type · SIL OFL',             cost:'free', note:'tall masthead caps'},
+  {cls:'f4', fam:'Big Shoulders Display', src:'Google Fonts · Chicago Design System · SIL OFL',   cost:'free', note:'sharp signage condensed'},
+  {cls:'f5', fam:'Archivo Expanded 900',  src:'Google Fonts · variable wdth 125 · SIL OFL',       cost:'free', note:'cinematic wide — free Monument substitute'},
+  {cls:'f6', fam:'Syne Extrabold',        src:'Google Fonts · Bonjour Monde · SIL OFL',           cost:'free', note:'art-world, deliberately odd'},
+  {cls:'f7', fam:'Anton — compressed',    src:'Google Fonts · tight-tracked + stretched · SIL OFL', cost:'free', note:'closest free Druk energy'},
+  {cls:'f8', fam:'Staatliches',           src:'Google Fonts · Brian LaRossa · SIL OFL',           cost:'free', note:'industrial signage caps'},
+  {cls:'f9', fam:'Dela Gothic One',       src:'Google Fonts · @studioomotesando · SIL OFL',       cost:'free', note:'boxy, fills the frame'},
+  {cls:'f10',fam:'Saira Condensed 900',   src:'Google Fonts · stretched 112% · SIL OFL',          cost:'free', note:'machine-shop condensed'},
+];
+
+const stage = document.getElementById('stage');
+stage.innerHTML = FONTS.map((f,i)=>`
+  <section class="panel ${f.cls}" data-i="${i+1}">
+    <div class="bg"></div><div class="scrim"></div>
+    <div class="meta">
+      <span class="n">${String(i+1).padStart(2,'0')}</span>
+      <span class="fam">${f.fam}</span>
+      <span class="cost ${f.cost==='free'?'':'paid'}">${f.cost}</span>
+      <span class="src">${f.src} — ${f.note}</span>
+    </div>
+    <h1 class="lockup"></h1>
+    <div class="rule"></div>
+  </section>`).join('');
+
+const root = document.documentElement, body = document.body;
+
+/* ---- live type controls ---- */
+const bind = (id, cssVar, fmt) => {
+  const el = document.getElementById(id), out = document.getElementById(id+'V');
+  const apply = () => { root.style.setProperty(cssVar, el.value); out.textContent = fmt(el.value); };
+  el.addEventListener('input', apply); apply();
+};
+bind('size',  '--size',  v => (+v).toFixed(1)+'vw');
+bind('track', '--track', v => (+v).toFixed(3)+'em');
+bind('lh',    '--lh',    v => (+v).toFixed(2));
+
+/* ---- the lockup text; "/" breaks the line, matching the two <span>s in the real hero ---- */
+const txt = document.getElementById('txt');
+const setText = () => {
+  const html = txt.value.split('/').map(s=>`<span>${s.trim()}</span>`).join('');
+  document.querySelectorAll('.lockup').forEach(l => l.innerHTML = html);
+  fitAll();
+};
+txt.addEventListener('input', setText); setText();
+
+/* ---- background photo ---- */
+const bg = document.getElementById('bg');
+const setBg = () => {
+  document.querySelectorAll('.panel .bg')
+    .forEach(b => b.style.backgroundImage = bg.value ? `url(${bg.value})` : 'none');
+  root.style.setProperty('--cut', bg.value ? `url(${bg.value})` : 'none');
+};
+bg.addEventListener('change', setBg); setBg();
+
+document.getElementById('photoBtn').addEventListener('click', e => {
+  body.classList.toggle('photo'); e.target.classList.toggle('on');
+});
+document.getElementById('invBtn').addEventListener('click', e => {
+  body.classList.toggle('invert'); e.target.classList.toggle('on');
+  e.target.textContent = body.classList.contains('invert') ? 'red' : 'bone';
+});
+document.getElementById('cutBtn').addEventListener('click', e => {
+  body.classList.toggle('cutout'); e.target.classList.toggle('on');
+});
+
+/* monument: size each face so its widest line spans the panel, like buildMask() in 03 */
+const mctx = document.createElement('canvas').getContext('2d');
+function fitAll() {
+  const on = body.classList.contains('monument');
+  document.querySelectorAll('.lockup').forEach(l => {
+    if (!on) { l.style.fontSize = ''; return; }
+    const cs = getComputedStyle(l);
+    mctx.font = cs.fontWeight + ' 100px ' + cs.fontFamily;
+    const w = Math.max(...[...l.querySelectorAll('span')]
+      .map(s => mctx.measureText(s.textContent).width), 1);
+    l.style.fontSize = (100 * l.clientWidth * 0.97 / w) + 'px';
+  });
+}
+document.getElementById('monBtn').addEventListener('click', e => {
+  body.classList.toggle('monument'); e.target.classList.toggle('on');
+  if (body.classList.contains('monument') && !body.classList.contains('photo'))
+    document.getElementById('photoBtn').click();
+  fitAll();
+});
+addEventListener('resize', fitAll);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);
+body.classList.add('photo');
+
+/* ---- solo: view one face in the real hero geometry ---- */
+const solo = n => {
+  document.querySelectorAll('.panel').forEach(p =>
+    p.classList.toggle('active', p.dataset.i === String(n)));
+  body.classList.add('solo');
+};
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'Escape') body.classList.remove('solo');
+  else if (/^[1-9]$/.test(e.key)) solo(e.key);
+  else if (e.key === '0') solo(10);
+});
+</script>

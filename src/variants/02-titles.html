@@ -173,6 +173,7 @@
 <script>
 const IMG = __IMGDATA__;
 const DEPTH = __DEPTH__;
+const HERO = '__HERO__';
 (function(){
   var html=document.documentElement; html.classList.add('js');
   var FINE=matchMedia('(pointer:fine)').matches;
@@ -180,25 +181,23 @@ const DEPTH = __DEPTH__;
   var SMOOTH=FINE&&!REDUCE;
   var clamp=function(v,a,b){return v<a?a:v>b?b:v;}, lerp=function(a,b,t){return a+(b-a)*t;};
 
-  document.getElementById('coverImg').src = IMG.tulle.uri;
+  document.getElementById('coverImg').src = IMG[HERO].uri;
 
-  /* ---------- the reel — panels are cells of a 4x3 texture atlas ---------- */
+  /* ---------- the reel — every photo + type cards, hero last ---------- */
   /* type cards ride the strip in the same physics as the photos (Bellantoni:
      type as a temporal object, not an overlay). Final panel = the hero image. */
-  var REEL=[
-    {img:'puffer'},{img:'band'},
-    {word:'PHOTOGRAPHY',tag:'001'},
-    {img:'legs'},{img:'salon'},{img:'warehouse'},{img:'stair'},{img:'hairpt'},
-    {word:'2026',tag:'002'},
-    {img:'portrait'},{img:'diptych'},{img:'profile'},{img:'bw'},{img:'desert'},
-    {img:'tulle'}];
-  var COLS=4,ROWS=4,CW=1024,CH=576,NP=REEL.length,TARGET=NP-1;
+  var REEL=Object.keys(IMG).filter(function(k){return k!==HERO;})
+    .map(function(k){return {img:k};});
+  REEL.splice(5,0,{word:'PHOTOGRAPHY',tag:'001'});
+  REEL.splice(Math.floor(REEL.length*0.55),0,{word:'2026',tag:'002'});
+  REEL.push({img:HERO});
+  var COLS=6,CW=1024,CH=576,NP=REEL.length,ROWS=Math.ceil(NP/COLS),TARGET=NP-1;
 
   /* deceleration: one continuous friction glide, p(u)=D*(1-(1-u)^K) — velocity
      decays monotonically to an exact stop at DUR, so the cut cadence stretches
-     (~0.18s early dwells -> ~2s final glide) and every frame is clearer than
+     (fast strobe dwells -> ~2s final glide) and every frame is clearer than
      the last. Blur derives from |velocity|; there is no separate settle phase. */
-  var DUR=6.0,KP=2.45;
+  var DUR=8.0,KP=2.6;
   function reelPhys(t){
     var u=clamp(t/DUR,0,1),om=Math.pow(1-u,KP);
     var p=TARGET*(1-om);
@@ -212,7 +211,9 @@ const DEPTH = __DEPTH__;
     var cv=document.getElementById('gl');
     var gl=cv.getContext('webgl',{antialias:true,alpha:false,premultipliedAlpha:false});
     if(!gl){ html.classList.add('nogl'); return; }
-    if(gl.getParameter(gl.MAX_TEXTURE_SIZE)<COLS*CW){ html.classList.add('nogl'); return; }
+    var maxTex=gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    if(maxTex<COLS*680){ html.classList.add('nogl'); return; }
+    if(maxTex<COLS*CW){ CW=680; CH=382; } /* small-GPU fallback atlas */
     function sh(t,src){var s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);
       if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.warn(gl.getShaderInfoLog(s));return null;}return s;}
     var vs=sh(gl.VERTEX_SHADER,'attribute vec2 p;varying vec2 vUv;void main(){vUv=p*0.5+0.5;gl_Position=vec4(p,0.0,1.0);}');
@@ -222,7 +223,7 @@ const DEPTH = __DEPTH__;
       'precision highp float;',
       'uniform sampler2D uImg;uniform sampler2D uDepth;',
       'uniform vec2 uFocal;uniform vec2 uMouse;uniform vec2 uRes;',
-      'uniform float uZoom;uniform float uImgAspect;uniform float uTime;uniform float uReveal;uniform float uPan;uniform float uVel;',
+      'uniform float uZoom;uniform float uImgAspect;uniform float uTime;uniform float uReveal;uniform float uPan;uniform float uVel;uniform vec2 uAuto;',
       'varying vec2 vUv;',
       'vec2 cover(vec2 uv){float ca=uRes.x/uRes.y;vec2 s=ca>uImgAspect?vec2(1.0,uImgAspect/ca):vec2(ca/uImgAspect,1.0);return (uv-0.5)*s+0.5;}',
       'void main(){',
@@ -233,9 +234,9 @@ const DEPTH = __DEPTH__;
       ' uv=(uv-uFocal)/uZoom+uFocal;',
       ' float d=texture2D(uDepth,clamp(uv,0.0,1.0)).r;',
       ' vec2 drift=vec2(sin(uTime*0.9),cos(uTime*0.62))*0.006*uReveal;',
-      ' vec2 par=(uMouse*0.075+drift)*(d-0.4)*uReveal;',
+      ' vec2 par=((uMouse*0.075+drift)*uReveal+uAuto)*(d-0.4);',
       ' uv+=par;',
-      ' float ab=((d-0.4)*0.0015+(0.0035+(d-0.4)*0.004)*uVel)*uReveal;',
+      ' float ab=((d-0.4)*0.0015+(0.0035+(d-0.4)*0.004)*uVel+length(uAuto)*0.06)*uReveal;',
       ' vec3 col;',
       ' col.r=texture2D(uImg,clamp(uv+vec2(ab,0.0),0.0,1.0)).r;',
       ' col.g=texture2D(uImg,clamp(uv,0.0,1.0)).g;',
@@ -259,16 +260,16 @@ const DEPTH = __DEPTH__;
       'uniform sampler2D uAtlas;uniform sampler2D uImg;',
       'uniform vec2 uRes;uniform float uPos;uniform float uBlur;uniform float uFinalMix;',
       'uniform float uImgAspect;uniform float uTime;',
+      'uniform vec2 uGrid;uniform float uNP;',
       'varying vec2 vUv;',
-      'const float COLS=4.0;const float ROWS=4.0;const float NP=15.0;',
       'vec2 cover(vec2 uv){float ca=uRes.x/uRes.y;vec2 s=ca>uImgAspect?vec2(1.0,uImgAspect/ca):vec2(ca/uImgAspect,1.0);return (uv-0.5)*s+0.5;}',
       'vec3 stripCol(float s,float y){',
-      ' if(s<0.0||s>=NP)return vec3(0.0);',
+      ' if(s<0.0||s>=uNP)return vec3(0.0);',
       ' float pi=floor(s);float fx=s-pi;float yc=clamp(y,0.004,0.996);',
-      ' float c=mod(pi,COLS);float r=floor(pi/COLS);',
-      ' vec3 col=texture2D(uAtlas,vec2((c+fx)/COLS,1.0-(r+(1.0-yc))/ROWS)).rgb;',
+      ' float c=mod(pi,uGrid.x);float r=floor(pi/uGrid.x);',
+      ' vec3 col=texture2D(uAtlas,vec2((c+fx)/uGrid.x,1.0-(r+(1.0-yc))/uGrid.y)).rgb;',
       ' float gf=mix(0.06,1.0,smoothstep(0.0,0.010,fx)*smoothstep(1.0,0.990,fx));',
-      ' if(pi>NP-1.5){',
+      ' if(pi>uNP-1.5){',
       '  vec2 fuv=cover(vec2(fx,y));',
       '  vec3 cf=texture2D(uImg,clamp(fuv,0.0,1.0)).rgb;',
       '  vec2 e=min(fuv,1.0-fuv); cf*=smoothstep(-0.05,0.045,min(e.x,e.y));',
@@ -308,10 +309,11 @@ const DEPTH = __DEPTH__;
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
     function uniforms(pr,names){var u={};names.forEach(function(n){u[n]=gl.getUniformLocation(pr,n);});
       u._p=gl.getAttribLocation(pr,'p');return u;}
-    var heroU=uniforms(heroPr,['uImg','uDepth','uFocal','uMouse','uRes','uZoom','uImgAspect','uTime','uReveal','uPan','uVel']);
-    var reelU=uniforms(reelPr,['uAtlas','uImg','uRes','uPos','uBlur','uFinalMix','uImgAspect','uTime']);
+    var heroU=uniforms(heroPr,['uImg','uDepth','uFocal','uMouse','uRes','uZoom','uImgAspect','uTime','uReveal','uPan','uVel','uAuto']);
+    var reelU=uniforms(reelPr,['uAtlas','uImg','uRes','uPos','uBlur','uFinalMix','uImgAspect','uTime','uGrid','uNP']);
     gl.useProgram(heroPr);gl.uniform1i(heroU.uImg,0);gl.uniform1i(heroU.uDepth,1);
     gl.useProgram(reelPr);gl.uniform1i(reelU.uImg,0);gl.uniform1i(reelU.uAtlas,2);
+    gl.uniform2f(reelU.uGrid,COLS,ROWS);gl.uniform1f(reelU.uNP,NP);
     function tex(unit){var t=gl.createTexture();gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,t);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
       gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
@@ -324,11 +326,12 @@ const DEPTH = __DEPTH__;
     function upload(t,unit,img){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,t);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
       gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img);}
-    var i1=new Image();i1.onload=function(){imgAspect=i1.naturalWidth/i1.naturalHeight;upload(tImg,0,i1);loaded++;};i1.src=IMG.tulle.uri;
+    var i1=new Image();i1.onload=function(){imgAspect=i1.naturalWidth/i1.naturalHeight;upload(tImg,0,i1);loaded++;};i1.src=IMG[HERO].uri;
     var i2=new Image();i2.onload=function(){upload(tDepth,1,i2);loaded++;};i2.src=DEPTH.depthmap;
     buildAtlas(function(canvas){upload(tAtlas,2,canvas);atlasOK=true;});
-    function resize(){var dpr=Math.min(devicePixelRatio||1,2);
+    function resize(){var dpr=Math.min(devicePixelRatio||1,innerWidth<820?1.5:2);
       var w=cv.clientWidth||innerWidth,h=cv.clientHeight||innerHeight;
+      var px=w*h*dpr*dpr; if(px>4600000)dpr*=Math.sqrt(4600000/px);
       cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);gl.viewport(0,0,cv.width,cv.height);}
     resize();window.addEventListener('resize',resize);
     GL={gl:gl,heroPr:heroPr,reelPr:reelPr,heroU:heroU,reelU:reelU,cv:cv,
@@ -396,8 +399,8 @@ const DEPTH = __DEPTH__;
   function crispName(){ nm.style.opacity=1; nm.style.filter='none';
     ghostEls.forEach(function(gh){gh.style.opacity=0;}); }
 
-  /* gallery */
-  var order=["puffer","band","legs","salon","hairpt","stair","diptych","profile","desert","bw","portrait","warehouse"];
+  /* gallery — every photo except the hero */
+  var order=Object.keys(IMG).filter(function(k){return k!==HERO;});
   var g=document.getElementById('gallery');
   order.forEach(function(k,i){var im=IMG[k];var d=document.createElement('div');d.className='frame';d.dataset.i=i;
     d.innerHTML='<img loading="lazy" src="'+im.uri+'" width="'+im.w+'" height="'+im.h+'" alt="">';g.appendChild(d);});
@@ -445,14 +448,22 @@ const DEPTH = __DEPTH__;
     gl.uniform1f(U.uTime,(now*0.0006)%1000.0);
     gl.drawArrays(gl.TRIANGLES,0,3); }
 
+  /* arrival: a beat of flat stillness, then the image breathes into depth —
+     an automatic parallax arc that swells past resting amplitude and hands
+     off to the mouse, paired with a slight dolly-zoom overshoot. */
+  var HOLD=0.22, INFL=1.5;
   function drawHero(now){ var gl=GL.gl,U=GL.heroU;
-    var tp=clamp((now-heroT0)/1100,0,1), e=1-Math.pow(1-tp,3);
+    var ht=(now-heroT0)/1000;
+    var q=clamp((ht-HOLD)/INFL,0,1), e=1-Math.pow(1-q,3);
+    var env=Math.sin(Math.PI*Math.pow(q,0.85));
+    var th=-0.6+2.2*q;
     gl.useProgram(GL.heroPr);
     gl.enableVertexAttribArray(U._p);gl.vertexAttribPointer(U._p,2,gl.FLOAT,false,0,0);
-    gl.uniform1f(U.uZoom,lerp(1.0,0.9,e));
+    gl.uniform1f(U.uZoom,lerp(1.0,0.9,e)-0.018*Math.sin(Math.PI*q));
     gl.uniform1f(U.uReveal,REDUCE?0.0:e);
+    gl.uniform2f(U.uAuto,0.055*env*Math.cos(th),0.055*env*Math.sin(th)*0.45);
     gl.uniform1f(U.uPan,heroPan);
-    gl.uniform2f(U.uFocal,DEPTH.fx,1.0-DEPTH.fy);
+    gl.uniform2f(U.uFocal,0.5,0.5); /* new hero: center zoom until a real depth/focal pass */
     gl.uniform2f(U.uMouse,mx,-my);
     gl.uniform2f(U.uRes,GL.cv.width,GL.cv.height);
     gl.uniform1f(U.uImgAspect,GL.imgAspect);

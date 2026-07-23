@@ -160,6 +160,7 @@
 <script>
 const IMG = __IMGDATA__;
 const DEPTH = __DEPTH__;
+const HERO = '__HERO__';
 (function(){
   var html=document.documentElement; html.classList.add('js');
   var FINE=matchMedia('(pointer:fine)').matches;
@@ -167,7 +168,7 @@ const DEPTH = __DEPTH__;
   var SMOOTH=FINE&&!REDUCE;
   var clamp=function(v,a,b){return v<a?a:v>b?b:v;}, lerp=function(a,b,t){return a+(b-a)*t;};
 
-  document.getElementById('coverImg').src = IMG.tulle.uri;
+  document.getElementById('coverImg').src = IMG[HERO].uri;
 
   /* ---------- WebGL depth hero ---------- */
   var GL=null;
@@ -230,10 +231,11 @@ const DEPTH = __DEPTH__;
     function upload(t,unit,img){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,t);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
       gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img);}
-    var i1=new Image();i1.onload=function(){imgAspect=i1.naturalWidth/i1.naturalHeight;upload(tImg,0,i1);loaded++;};i1.src=IMG.tulle.uri;
+    var i1=new Image();i1.onload=function(){imgAspect=i1.naturalWidth/i1.naturalHeight;upload(tImg,0,i1);loaded++;};i1.src=IMG[HERO].uri;
     var i2=new Image();i2.onload=function(){upload(tDepth,1,i2);loaded++;};i2.src=DEPTH.depthmap;
-    function resize(){var dpr=Math.min(devicePixelRatio||1,2);
+    function resize(){var dpr=Math.min(devicePixelRatio||1,innerWidth<820?1.5:2);
       var w=cv.clientWidth||innerWidth,h=cv.clientHeight||innerHeight;
+      var px=w*h*dpr*dpr; if(px>4600000)dpr*=Math.sqrt(4600000/px);
       cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);gl.viewport(0,0,cv.width,cv.height);}
     resize();window.addEventListener('resize',resize);
     gl.uniform1i(U.uImg,0);gl.uniform1i(U.uDepth,1);
@@ -246,7 +248,7 @@ const DEPTH = __DEPTH__;
     gh.setAttribute('aria-hidden','true');hero.insertBefore(gh,nm);});
 
   /* gallery */
-  var order=["puffer","band","legs","salon","hairpt","stair","diptych","profile","desert","bw","portrait","warehouse"];
+  var order=Object.keys(IMG).filter(function(k){return k!==HERO;});
   var g=document.getElementById('gallery');
   order.forEach(function(k,i){var im=IMG[k];var d=document.createElement('div');d.className='frame';d.dataset.i=i;
     d.innerHTML='<img loading="lazy" src="'+im.uri+'" width="'+im.w+'" height="'+im.h+'" alt="">';g.appendChild(d);});
@@ -295,7 +297,7 @@ const DEPTH = __DEPTH__;
       var reveal=clamp((tp-0.6)/0.4,0,1);
       gl.uniform1f(U.uZoom,zoom);
       gl.uniform1f(U.uReveal,REDUCE?0.0:reveal);
-      gl.uniform2f(U.uFocal,DEPTH.fx,1.0-DEPTH.fy);
+      gl.uniform2f(U.uFocal,0.47,0.52); /* new hero focal: subject, until a real depth pass */
       gl.uniform2f(U.uMouse,mx,-my);
       gl.uniform2f(U.uRes,GL.cv.width,GL.cv.height);
       gl.uniform1f(U.uImgAspect,GL.imgAspect);
