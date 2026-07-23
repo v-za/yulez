@@ -95,6 +95,16 @@
     border-radius:2px;background:var(--red);animation:sh 1.8s ease-in-out infinite}
   @keyframes sh{0%{transform:translateY(0);opacity:1}70%{transform:translateY(14px);opacity:0}100%{opacity:0}}
 
+  .heronav{position:absolute;left:clamp(16px,4vw,54px);top:clamp(18px,4vh,44px);z-index:5;
+    display:flex;align-items:center;gap:12px;font-family:var(--mono);
+    opacity:0;transition:opacity .6s;pointer-events:none}
+  html.ready .heronav{opacity:1;pointer-events:auto}
+  .heronav button{background:none;border:0;color:rgba(245,239,230,.65);cursor:pointer;
+    font-size:1.5rem;line-height:1;padding:4px 8px;font-family:var(--mono)}
+  .heronav button:hover{color:var(--red)}
+  html.cursor-on .heronav button{cursor:none}
+  #hnCount{font-size:.62rem;letter-spacing:.22em;color:rgba(245,239,230,.5)}
+
   .skiphint{position:absolute;right:clamp(16px,4vw,54px);top:clamp(18px,4vh,44px);z-index:4;
     font-family:var(--mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;
     color:rgba(245,239,230,.5);opacity:0;transition:opacity .5s}
@@ -172,6 +182,11 @@
     <div class="rule" aria-hidden="true"></div>
     <div class="scrollhint" aria-hidden="true"></div>
     <div class="skiphint" aria-hidden="true">click to skip</div>
+    <div class="heronav" aria-hidden="true">
+      <button class="hn-prev" aria-label="Previous image">&#8249;</button>
+      <span id="hnCount"></span>
+      <button class="hn-next" aria-label="Next image">&#8250;</button>
+    </div>
   </section>
 
   <!-- work index: year covers, each photo carrying its year inside the image -->
@@ -419,7 +434,8 @@ const HERO = '__HERO__';
       get imgAspect(){return imgAspect;},
       ready:function(){return loaded>=2;},
       atlasReady:function(){return atlasOK;},
-      maskReady:function(){return maskOK;}};
+      maskReady:function(){return maskOK;},
+      setHero:function(im){imgAspect=im.naturalWidth/im.naturalHeight;upload(tImg,0,im);}};
   })();
 
   /* atlas: photos cover-fit into 16:9 cells; type cards drawn with the display
@@ -528,6 +544,60 @@ const HERO = '__HERO__';
   addEventListener('pointerdown',skipIntro);
   addEventListener('keydown',function(e){if(MODE!=='hero')skipIntro();});
   if(REDUCE){ html.classList.add('noanim','ready'); MODE='hero'; heroT0=-1e6; }
+
+  /* ---- hero browse: whip-pan left/right through the reel set ---- */
+  var BROWSE=REEL.map(function(cl){return cl.img;}).filter(Boolean);
+  var bIdx=BROWSE.length-1, bAnim=null, bCache={};
+  function hnCount(){ var el=document.getElementById('hnCount');
+    if(el) el.textContent=String(bIdx+1).padStart(2,'0')+' / '+String(BROWSE.length).padStart(2,'0'); }
+  hnCount();
+  function heroNav(dir){
+    if(bAnim) return;
+    if(MODE!=='hero'){ skipIntro(); return; }
+    var to=bIdx+dir;
+    if(to<0||to>=BROWSE.length) return;
+    var k=BROWSE[to];
+    if(html.classList.contains('nogl')||!GL){
+      bIdx=to; hnCount();
+      var f=document.getElementById('coverImg');
+      if(f){ f.src=(typeof FILES!=='undefined'&&FILES[k]&&FILES[k].src)||IMG[k].uri; }
+      return;
+    }
+    var im=bCache[k];
+    if(!im){ im=new Image(); im.src=IMG[k].uri; bCache[k]=im; }
+    var start=function(){ bAnim={t0:performance.now(),dir:dir,img:im,swapped:false}; bIdx=to; hnCount(); };
+    if(im.complete&&im.naturalWidth) start(); else im.onload=start;
+  }
+  /* OUT 200ms toward the edge, texture swap at apex, IN 280ms from the far side */
+  function browseStep(now){
+    if(!bAnim) return;
+    var a=bAnim, t=now-a.t0;
+    if(t<200){ var u=t/200; heroPan=a.dir*0.6*u*u; vel=Math.max(vel,u); }
+    else{
+      if(!a.swapped){ GL.setHero(a.img); a.swapped=true; }
+      var u2=Math.min(1,(t-200)/280), e=1-Math.pow(1-u2,3);
+      heroPan=-a.dir*0.6*(1-e); vel=Math.max(vel,1-u2);
+      if(u2>=1){ heroPan=0; bAnim=null; }
+    }
+  }
+  document.querySelector('.hn-prev').addEventListener('click',function(e){e.stopPropagation();heroNav(-1);});
+  document.querySelector('.hn-next').addEventListener('click',function(e){e.stopPropagation();heroNav(1);});
+  addEventListener('keydown',function(e){
+    if(MODE!=='hero'||!html.classList.contains('ready'))return;
+    var lb=document.getElementById('lightbox');
+    if(lb&&lb.classList.contains('open'))return;
+    if(e.key==='ArrowLeft')heroNav(-1); else if(e.key==='ArrowRight')heroNav(1);});
+  var wheelAcc=0,wheelLock=0;
+  addEventListener('wheel',function(e){
+    if(MODE!=='hero'||!html.classList.contains('ready'))return;
+    var hr=document.getElementById('hero').getBoundingClientRect();
+    if(hr.bottom<innerHeight*0.5)return;
+    if(Math.abs(e.deltaX)<Math.abs(e.deltaY)*1.2)return;
+    var n2=performance.now();
+    if(n2<wheelLock)return;
+    wheelAcc+=e.deltaX;
+    if(Math.abs(wheelAcc)>90){ heroNav(wheelAcc>0?1:-1); wheelAcc=0; wheelLock=n2+450; }
+  },{passive:true});
   if(!GL){ html.classList.add('playing');
     setTimeout(function(){html.classList.add('revealName');},500);
     setTimeout(function(){html.classList.add('ready');},900); }
@@ -620,7 +690,7 @@ const HERO = '__HERO__';
           goHero(now,st.x); drawHero(now); }
         else drawReel(now,st);
       }
-      else if(MODE==='hero'){ heroPan*=Math.exp(-5*dt); drawHero(now); }
+      else if(MODE==='hero'){ heroPan*=Math.exp(-5*dt); browseStep(now); drawHero(now); }
     }
     runReveals();
     if(prog){ var mxs=Math.max(1,wrapH-vh); prog.style.width=(clamp(sc/mxs,0,1)*100).toFixed(2)+'%'; }
@@ -825,7 +895,14 @@ const HERO = '__HERO__';
     ' float hy=paperH(uv+vec2(0.0,eps),amp);',
     ' vec3 nrm=normalize(vec3((h0-hx)/eps*0.016,(h0-hy)/eps*0.016,1.0));',
     /* "2024" pressed in — faint at rest, deepens when the sheet is touched */
-    ' vec2 en=vec2(uv.x-uCtr.x,(uv.y-uCtr.y)/uImgAspect)/uCtrR;',
+    /* the stamp anchors to the palm but must never fall in the cover-crop:
+       clamp its center into the band of the image this viewport actually shows */
+    ' float caR=uRes.x/uRes.y;',
+    ' float hby=caR>uImgAspect?(uImgAspect/caR)*0.5:0.5;',
+    ' float hbx=caR>uImgAspect?0.5:(caR/uImgAspect)*0.5;',
+    ' vec2 ctr=vec2(clamp(uCtr.x,0.5-hbx+uCtrR*1.1,0.5+hbx-uCtrR*1.1),',
+    '              clamp(uCtr.y,0.5-hby+uCtrR*0.8,0.5+hby-uCtrR*0.8));',
+    ' vec2 en=vec2(uv.x-ctr.x,(uv.y-ctr.y)/uImgAspect)/uCtrR;',
     ' vec2 tuv=clamp(en*0.5+0.5,0.0,1.0);',
     ' float th=texture2D(uTxt,tuv).r;',
     ' float thx=texture2D(uTxt,clamp(tuv+vec2(0.018,0.0),0.0,1.0)).r;',
@@ -850,7 +927,7 @@ const HERO = '__HERO__';
     ' lit*=1.0-0.10*th*em;',
     ' vec3 col=mix(colRaw,lit,lightMix);',
     /* red ink breathes into the emboss only while engaged */
-    ' col+=vec3(1.0,0.13,0.09)*th*(0.15+0.25*max(W,B))*uReveal;',
+    ' col+=vec3(1.0,0.13,0.09)*th*(0.34+0.30*max(W,B))*uReveal;',
     /* crumpling: the room darkens around the ball forming in her hand */
     ' col=mix(col,vec3(0.01,0.01,0.012),B*smoothstep(0.28,0.85,length(toC)*2.0));'
   ].join('\n');
@@ -929,45 +1006,48 @@ const HERO = '__HERO__';
         cx=(e.clientX-r.left)/r.width;cy=(e.clientY-r.top)/r.height;},{passive:true});
       sec.addEventListener('mouseleave',function(){cx=cy=-1;});
     }
-    /* touch: there is no cursor, so the cover drives its own gaze.
-       Two decisions make this read as alive rather than mechanical:
-       1. the effect is PINNED ON (gazeHold) instead of swelling only when the
-          gaze crosses the eye — otherwise it has to stare straight ahead to
-          stay domed, and the whole thing looks frozen. Dome on, eyes free.
-       2. it is already running when you scroll to it — no wind-up.
-       Then the gaze darts wide and fast: short holds, quick flicks, the odd
-       double-take. Goofy, like something looking around the room. */
-    var gazeTick=null, gazeHold=false;
+    /* touch: there is no cursor, so the cover performs one deliberate beat on
+       a loop — bulge, the pupil looks around, it returns to place, unbulge,
+       rest. Earlier passes ran the dome and the gaze on separate clocks, so
+       the two never lined up; this is a single sequence instead. The pupil
+       only roams while the dome is up, and it always comes home before the
+       dome lets go. Starts mid-look so scrolling to it lands mid-beat. */
+    var gazeTick=null, gazeHold=false, gazeHov=0;
     if(!FINE && !REDUCE){
-      gazeHold=true; hov=1;                            /* arrive mid-effect */
-      var gx=0.5,gy=0.5,fx=0.5,fy=0.5,px=0.5,py=0.5,
-          gt0=-1e4,gdur=90,gnext=0,combo=0;
-      function pick(es,ar){
-        px=gx; py=gy;
-        if(Math.random()<0.26){                        /* glance back at the eye */
-          fx=es.x+(Math.random()*2-1)*0.10/Math.max(1,ar);
-          fy=es.y+(Math.random()*2-1)*0.10;
-        }else{                                         /* roam wide */
-          fx=0.5+(Math.random()*2-1)*0.46;
-          fy=0.5+(Math.random()*2-1)*0.38;
-        }
-        fx=Math.min(0.97,Math.max(0.03,fx));
-        fy=Math.min(0.97,Math.max(0.03,fy));
-      }
+      gazeHold=true; hov=1; gazeHov=1;
+      var PHASES=[
+        {d:1150,hov:0,look:0,jit:900},   /* 0 rest    — flat, pupil at centre */
+        {d: 450,hov:1,look:0,jit:  0},   /* 1 bulge   — dome swells, pupil still */
+        {d:2000,hov:1,look:1,jit:500},   /* 2 look    — pupil roams (~2s) */
+        {d: 420,hov:1,look:0,jit:  0},   /* 3 return  — pupil eases back to place */
+        {d: 450,hov:0,look:0,jit:  0}    /* 4 unbulge — dome relaxes */
+      ];
+      var ph=2, phEnd=0,                                /* land mid-look */
+          gx=0.5,gy=0.5,fx=0.5,fy=0.5,px=0.5,py=0.5,gt0=-1e4,gdur=90,gnext=0;
       gazeTick=function(now,es,ar){
-        if(now>=gnext){
-          pick(es,ar);
-          gt0=now; gdur=55+Math.random()*70;           /* 55–125ms flick */
-          if(combo>0){ combo--; gnext=now+gdur+90+Math.random()*130; }
-          else{                                        /* now and then, a double-take */
-            if(Math.random()<0.22) combo=1+((Math.random()*2)|0);
-            gnext=now+gdur+300+Math.random()*760;      /* short, restless holds */
-          }
+        if(!phEnd) phEnd=now+PHASES[ph].d;
+        if(now>=phEnd){
+          ph=(ph+1)%PHASES.length;
+          phEnd=now+PHASES[ph].d+Math.random()*PHASES[ph].jit;
+          if(PHASES[ph].look) gnext=0;                  /* start roaming at once */
         }
-        var k=Math.min(1,(now-gt0)/gdur), e=k*k*(3-2*k);
-        gx=px+(fx-px)*e; gy=py+(fy-py)*e;
-        cx=gx+Math.sin(now*0.0027)*0.007;              /* tremor: never frozen */
-        cy=gy+Math.cos(now*0.0021)*0.007;
+        var P=PHASES[ph];
+        gazeHov=P.hov;
+        if(P.look){                                     /* dart around the frame */
+          if(now>=gnext){
+            px=gx; py=gy;
+            fx=Math.min(0.97,Math.max(0.03,0.5+(Math.random()*2-1)*0.46));
+            fy=Math.min(0.97,Math.max(0.03,0.5+(Math.random()*2-1)*0.38));
+            gt0=now; gdur=55+Math.random()*70;          /* 55–125ms flick */
+            gnext=now+gdur+230+Math.random()*300;       /* ~3 looks per beat */
+          }
+          var k=Math.min(1,(now-gt0)/gdur), e=k*k*(3-2*k);
+          gx=px+(fx-px)*e; gy=py+(fy-py)*e;
+        }else{                                          /* home, before the dome drops */
+          gx+=(es.x-gx)*0.14; gy+=(es.y-gy)*0.14;
+        }
+        cx=gx+Math.sin(now*0.0027)*0.005;               /* tremor: never frozen */
+        cy=gy+Math.cos(now*0.0021)*0.005;
       };
     }
     function fitScale(){
@@ -992,7 +1072,7 @@ const HERO = '__HERO__';
       }
       /* touch: hold every cover's effect open so the gaze can roam without
          collapsing it — the mobile equivalent of parking the cursor on it */
-      if(gazeHold&&!entering) hovT=1;
+      if(gazeHold&&!entering) hovT=gazeHov;
       if(REDUCE) hovT=0;
       hov+=(hovT-hov)*0.07;
       var w={z:0,b:0,rot:0,f:0};
