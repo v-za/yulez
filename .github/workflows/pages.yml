@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# let the workflow publish to Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one deploy at a time; newer pushes supersede in-flight runs
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Pillow lets build.py emit WebP renditions + shrink the inline GL payload
+      - run: pip install pillow
+
+      - name: Build site
+        run: python3 src/build.py
+
+      - name: Set public landing page
+        run: |
+          # dist/ is gitignored, so CI builds fresh — build.py writes the
+          # decision-graph menu to dist/index.html. For the PUBLIC site the
+          # landing page is the full experience (covers), and the dev menu
+          # moves to /menu.html.
+          mv dist/index.html dist/menu.html
+          cp dist/05-covers.html dist/index.html
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
