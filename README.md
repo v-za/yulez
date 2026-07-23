@@ -6,20 +6,27 @@ A single-page, fully self-contained portfolio site for music &amp; editorial pho
 
 Open **`index.html`** directly in any browser — everything (photos, font, depth maps) is embedded, so there is no build step or server required.
 
-## Highlights
+The site is being explored as several **design variants**. After a rebuild, open
+**`dist/index.html`** for a side-by-side menu of every variant; `index.html` at the
+repo root is always the currently promoted one (`MAIN` in `src/build.py`).
 
-- **Cinematic WebGL hero** — a depth-map shader drives a 4s pull-back intro, cursor-reactive 3D parallax, subtle chromatic aberration, barrel-lens curve, a drifting light-leak, and film grain.
-- **Name treatment** — Archivo Black (embedded), the letter **A** carries a star built into its counter, revealed with a left-to-right shutter-blur (Wong-Kar-wai style) motion.
-- **Seamless gallery** — full-bleed masonry of her work with a fullscreen lightbox (arrow-key nav, shutter transition).
-- **Craft** — smooth inertia scroll, custom cursor, scroll-progress bar; degrades gracefully on touch, no-WebGL, and `prefers-reduced-motion`.
+## Variants
+
+- **01 — cinematic** — depth-map WebGL hero with a 4s pull-back intro, cursor-reactive 3D parallax, chromatic aberration, barrel-lens curve, drifting light-leak, film grain.
+- **02 — titles** — movie-title-sequence opening: a film reel of photos and wide-tracked type cards whips past with step-printed motion ghosts and glides down under friction over ~5s — every frame clearer than the last — until the strip stills on the hero. The name resolves out of the same blur, driven by reel velocity (Bellantoni, *Type in Motion*). Click or key skips it.
+
+Shared across variants: the Archivo Black name treatment (the **A** carries a star in its counter, revealed with a left-to-right shutter-blur), full-bleed masonry gallery with lightbox, inertia scroll, custom cursor, scroll-progress bar; graceful degradation on touch, no-WebGL, and `prefers-reduced-motion`.
 
 ## Project layout
 
 ```
-index.html            # the complete, self-contained site (open this)
+index.html            # the promoted variant, self-contained (open this)
+dist/                 # built variants + comparison menu (gitignored)
 src/
-  portfolio_tpl.html  # HTML/CSS/JS template with __PLACEHOLDER__ tokens
-  build.py            # injects the data assets into the template -> index.html
+  variants/           # one HTML/CSS/JS template per design, __PLACEHOLDER__ tokens
+    01-cinematic.html
+    02-titles.html
+  build.py            # injects data into every variant -> dist/, promotes MAIN -> index.html
   data/
     imgdata.json      # base64 photos
     depthlayers.json  # hero depth map + focal point
@@ -33,6 +40,6 @@ src/
 python3 src/build.py
 ```
 
-Regenerates `index.html` from the template and `src/data/`.
+Rebuilds every variant in `src/variants/` into `dist/`, regenerates the `dist/index.html` menu, and copies the `MAIN` variant to the root `index.html`. Adding a design = duplicate a variant file, rename it (`NN-name.html`), rebuild.
 
 > Placeholder credits, client names, and the contact email are stand-ins to be replaced with real details.
