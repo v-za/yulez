@@ -155,7 +155,16 @@ const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on galler
     void lbImg.offsetWidth;
     lbImg.style.transition = 'transform ' + DUR + 'ms ' + ease;
     lbImg.style.transform = xformFor(to, base);
-    var fin = function(){ lbImg.style.transition = ''; lbImg.style.transform = ''; flying = false; done && done(); };
+    /* land the image AT the grid slot: move its layout to `to` and drop the
+       transform in the same paint, so clearing the transform doesn't snap it
+       back to `base` (center) and flash during the close fade-out */
+    var fin = function(){
+      lbImg.style.transition = 'none';
+      setRect(to);
+      lbImg.style.transform = '';
+      flying = false;
+      done && done();
+    };
     setTimeout(fin, DUR + 60);
   }
   function hideSource(i){ restoreSource(); var im = gridImg(i); if(im){ im.style.opacity = 0; hidden = im; } }

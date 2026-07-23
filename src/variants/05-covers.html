@@ -1011,23 +1011,26 @@ const HERO = '__HERO__';
        rest. Earlier passes ran the dome and the gaze on separate clocks, so
        the two never lined up; this is a single sequence instead. The pupil
        only roams while the dome is up, and it always comes home before the
-       dome lets go. Starts mid-look so scrolling to it lands mid-beat. */
+       dome lets go. Phase 0 is a one-time intro: on first scroll-in it does
+       NOT bulge — the pupil just darts a quick 2–3-look glance (~1s), flat.
+       After that it drops into the looping bulge/look/unbulge beat. */
     var gazeTick=null, gazeHold=false, gazeHov=0;
     if(!FINE && !REDUCE){
-      gazeHold=true; hov=1; gazeHov=1;
+      gazeHold=true; hov=0; gazeHov=0;                  /* arrive flat, no bulge */
       var PHASES=[
-        {d:1150,hov:0,look:0,jit:900},   /* 0 rest    — flat, pupil at centre */
-        {d: 450,hov:1,look:0,jit:  0},   /* 1 bulge   — dome swells, pupil still */
-        {d:2000,hov:1,look:1,jit:500},   /* 2 look    — pupil roams (~2s) */
-        {d: 420,hov:1,look:0,jit:  0},   /* 3 return  — pupil eases back to place */
-        {d: 450,hov:0,look:0,jit:  0}    /* 4 unbulge — dome relaxes */
+        {d:1050,hov:0,look:1,jit:  0},   /* 0 intro   — flat, quick glance (once) */
+        {d:2600,hov:0,look:0,jit:1400},  /* 1 rest    — flat: let the photo read */
+        {d: 450,hov:1,look:0,jit:  0},   /* 2 bulge   — dome swells, pupil still */
+        {d:1050,hov:1,look:1,jit:400},   /* 3 look    — pupil darts 2–3× (~1s) */
+        {d: 420,hov:1,look:0,jit:  0},   /* 4 return  — pupil eases back to place */
+        {d: 450,hov:0,look:0,jit:  0}    /* 5 unbulge — dome relaxes */
       ];
-      var ph=2, phEnd=0,                                /* land mid-look */
+      var ph=0, phEnd=0,                                /* start at the intro */
           gx=0.5,gy=0.5,fx=0.5,fy=0.5,px=0.5,py=0.5,gt0=-1e4,gdur=90,gnext=0;
       gazeTick=function(now,es,ar){
         if(!phEnd) phEnd=now+PHASES[ph].d;
         if(now>=phEnd){
-          ph=(ph+1)%PHASES.length;
+          ph++; if(ph>=PHASES.length) ph=1;             /* loop skips the intro */
           phEnd=now+PHASES[ph].d+Math.random()*PHASES[ph].jit;
           if(PHASES[ph].look) gnext=0;                  /* start roaming at once */
         }
@@ -1039,7 +1042,7 @@ const HERO = '__HERO__';
             fx=Math.min(0.97,Math.max(0.03,0.5+(Math.random()*2-1)*0.46));
             fy=Math.min(0.97,Math.max(0.03,0.5+(Math.random()*2-1)*0.38));
             gt0=now; gdur=55+Math.random()*70;          /* 55–125ms flick */
-            gnext=now+gdur+230+Math.random()*300;       /* ~3 looks per beat */
+            gnext=now+gdur+200+Math.random()*150;       /* 2–3 darts per glance */
           }
           var k=Math.min(1,(now-gt0)/gdur), e=k*k*(3-2*k);
           gx=px+(fx-px)*e; gy=py+(fy-py)*e;
@@ -1048,6 +1051,10 @@ const HERO = '__HERO__';
         }
         cx=gx+Math.sin(now*0.0027)*0.005;               /* tremor: never frozen */
         cy=gy+Math.cos(now*0.0021)*0.005;
+        /* the 2026 eye ignores uCur — its look-around lives in the uMouse
+           parallax, which touch never feeds. Drive it from the gaze too, a
+           little past full swing so the glance actually reads on a phone. */
+        tmx=(gx*2-1)*1.3; tmy=(gy*2-1)*1.3;
       };
     }
     function fitScale(){
