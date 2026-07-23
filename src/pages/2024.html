@@ -88,7 +88,7 @@
 </div>
 
 <script>
-const IMG = __IMGDATA__;
+const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on gallery pages */
 (function(){
   /* prototype: the 2024 set = first 14 images; real data will carry year + captions */
   var order = Object.keys(IMG).slice(24, 34);
@@ -98,7 +98,7 @@ const IMG = __IMGDATA__;
   order.forEach(function(k, i){
     var im = IMG[k], d = document.createElement('div');
     d.className = 'frame'; d.dataset.i = i;
-    d.innerHTML = '<img loading="lazy" src="' + im.uri + '" width="' + im.w + '" height="' + im.h + '" alt="Yulissa Benitez, 2024">';
+    d.innerHTML = '<img loading="lazy" src="' + im.src + '"'+(im.srcset ? ' srcset="' + im.srcset + '" sizes="(max-width:520px) 100vw, (max-width:820px) 50vw, 33vw"' : '')+' width="' + im.w + '" height="' + im.h + '" alt="Yulissa Benitez, 2024">';
     g.appendChild(d);
   });
   document.getElementById('count').textContent = order.length + ' SELECTS';
@@ -116,7 +116,9 @@ const IMG = __IMGDATA__;
       lbCount = document.getElementById('lbCount'), lbCap = document.getElementById('lbCap'),
       idx = 0, flying = false, hidden = null;
   var RM = matchMedia('(prefers-reduced-motion:reduce)').matches;
-  var EASE = 'cubic-bezier(.22,.9,.24,1)', DUR = 520;
+  var EASE_IN = 'cubic-bezier(.18,.8,.26,1.04)';   /* grows with a whisper of overshoot */
+  var EASE_OUT = 'cubic-bezier(.3,.72,.3,1)';       /* shrinks home, no bounce */
+  var DUR = 560;
 
   function gridImg(i){ var f = g.querySelector('.frame[data-i="' + i + '"] img'); return f || null; }
   function setRect(r){ lbImg.style.left = r.left + 'px'; lbImg.style.top = r.top + 'px';
@@ -125,12 +127,35 @@ const IMG = __IMGDATA__;
     var w = +IMG[k].w, h = +IMG[k].h, s = Math.min(innerWidth * .92 / w, innerHeight * .82 / h);
     return { left: (innerWidth - w * s) / 2, top: (innerHeight - h * s) / 2, width: w * s, height: h * s };
   }
-  function fly(from, to, done){
+  /* transform-based FLIP: the image is laid out at `base`, and scale/translate
+     carries it from `from` — GPU-composited, so the growth stays silky */
+  function xformFor(from, base){
+    var s = from.width / base.width;
+    var dx = (from.left + from.width / 2) - (base.left + base.width / 2);
+    var dy = (from.top + from.height / 2) - (base.top + base.height / 2);
+    return 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')';
+  }
+  function fly(from, base, ease, done){
     flying = true;
-    lbImg.style.transition = 'none'; setRect(from); void lbImg.offsetWidth;
-    lbImg.style.transition = ['left','top','width','height'].map(function(p){ return p + ' ' + DUR + 'ms ' + EASE; }).join(',');
-    setRect(to);
+    setRect(base);
+    lbImg.style.transition = 'none';
+    lbImg.style.transform = xformFor(from, base);
+    void lbImg.offsetWidth;
+    lbImg.style.transition = 'transform ' + DUR + 'ms ' + ease;
+    lbImg.style.transform = 'translate(0,0) scale(1)';
     var fin = function(){ lbImg.style.transition = ''; flying = false; done && done(); };
+    setTimeout(fin, DUR + 60);
+  }
+  /* the reverse: from center back into the grid slot */
+  function flyBack(base, to, ease, done){
+    flying = true;
+    setRect(base);
+    lbImg.style.transition = 'none';
+    lbImg.style.transform = 'translate(0,0) scale(1)';
+    void lbImg.offsetWidth;
+    lbImg.style.transition = 'transform ' + DUR + 'ms ' + ease;
+    lbImg.style.transform = xformFor(to, base);
+    var fin = function(){ lbImg.style.transition = ''; lbImg.style.transform = ''; flying = false; done && done(); };
     setTimeout(fin, DUR + 60);
   }
   function hideSource(i){ restoreSource(); var im = gridImg(i); if(im){ im.style.opacity = 0; hidden = im; } }
@@ -144,8 +169,9 @@ const IMG = __IMGDATA__;
   function show(i){
     idx = (i + order.length) % order.length;
     var k = order[idx];
-    lbImg.src = IMG[k].uri;
-    lbImg.style.transition = 'none'; setRect(centerRect(k)); void lbImg.offsetWidth; lbImg.style.transition = '';
+    lbImg.src = IMG[k].src;
+    lbImg.style.transition = 'none'; lbImg.style.transform = ''; setRect(centerRect(k));
+    void lbImg.offsetWidth; lbImg.style.transition = '';
     restoreSource(); hideSource(idx);
     meta(k);
     lbImg.classList.remove('lb-anim'); void lbImg.offsetWidth; lbImg.classList.add('lb-anim');
@@ -155,14 +181,14 @@ const IMG = __IMGDATA__;
     idx = (i + order.length) % order.length;
     var k = order[idx];
     lbImg.classList.remove('lb-anim');
-    lbImg.src = IMG[k].uri;
+    lbImg.src = IMG[k].src;
     meta(k);
     lb.classList.add('open'); lb.setAttribute('aria-hidden','false');
     var src = gridImg(idx);
-    if (RM || !src){ setRect(centerRect(k)); hideSource(idx); return; }
+    if (RM || !src){ setRect(centerRect(k)); lbImg.style.transform = ''; hideSource(idx); return; }
     var r = src.getBoundingClientRect();
     hideSource(idx);
-    fly({left:r.left, top:r.top, width:r.width, height:r.height}, centerRect(k));
+    fly({left:r.left, top:r.top, width:r.width, height:r.height}, centerRect(k), EASE_IN);
   }
   function close(){
     if (flying) return;
@@ -172,7 +198,7 @@ const IMG = __IMGDATA__;
     var r = src.getBoundingClientRect();
     lbImg.classList.remove('lb-anim');
     lb.classList.add('closing');
-    fly(centerRect(order[idx]), {left:r.left, top:r.top, width:r.width, height:r.height}, function(){
+    flyBack(centerRect(order[idx]), {left:r.left, top:r.top, width:r.width, height:r.height}, EASE_OUT, function(){
       lb.classList.remove('open'); lb.classList.remove('closing');
       restoreSource();
     });

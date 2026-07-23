@@ -1,46 +1,82 @@
 # Yulissa Benitez — Photography Portfolio
 
-A single-page, fully self-contained portfolio site for music &amp; editorial photographer **Yulissa Benitez**.
+Portfolio site for music &amp; editorial photographer **Yulissa Benitez** — WebGL
+covers, a year-based work index, and a decision-graph process for exploring
+design directions.
 
 ## Usage
 
-Open **`index.html`** directly in any browser — everything (photos, font, depth maps) is embedded, so there is no build step or server required.
+```bash
+python3 src/build.py     # plain build
+# or, with Pillow available (recommended — emits WebP + shrinks GL payloads):
+<venv-python> src/build.py
+```
 
-The site is being explored as several **design variants**. After a rebuild, open
-**`dist/index.html`** for a side-by-side menu of every variant; `index.html` at the
-repo root is always the currently promoted one (`MAIN` in `src/build.py`).
+Then open **`dist/index.html`** (the promoted landing variant). `dist/menu.html`
+is the **decision graph** — every design direction as a node, chosen path in red.
+The repo-root `index.html` is a copy of the `MAIN` variant with asset paths
+adjusted, so it works from the repo root too.
 
-## Variants
+Keep `dist/` together when copying — gallery pages reference `dist/assets/`.
 
-- **01 — cinematic** — depth-map WebGL hero with a 4s pull-back intro, cursor-reactive 3D parallax, chromatic aberration, barrel-lens curve, drifting light-leak, film grain.
-- **02 — titles** — movie-title-sequence opening: a film reel of photos and wide-tracked type cards whips past with step-printed motion ghosts and glides down under friction over ~6s — every frame clearer than the last — until the strip stills on the hero, which then breathes into depth (dimensional arrival). The name resolves out of the same blur, driven by reel velocity (Bellantoni, *Type in Motion*). Click or key skips it.
-- **03 — monument** — the reel runs full-bleed from frame one with giant stacked YULISSA/BENITEZ type overlaid as translucent dark glass — the blur storm visible through and around the letterforms; as the strip slows the name fades away, handing the frame to the finished still. Nameless at rest, no marquee.
+## Architecture
 
-Shared across variants: the Archivo Black name treatment (the **A** carries a star in its counter, revealed with a left-to-right shutter-blur), full-bleed masonry gallery with lightbox, inertia scroll, custom cursor, scroll-progress bar; graceful degradation on touch, no-WebGL, and `prefers-reduced-motion`.
+Two kinds of image delivery, chosen per consumer:
+
+- **Display images** (gallery grids, lightboxes) are real files under
+  `dist/assets/img/` — original JPEG + responsive WebP renditions (480/960/1600)
+  with `srcset`, `sizes`, and honest lazy loading. Year pages are ~30 KB of HTML.
+- **WebGL-sampled images** (hero texture, reel atlas sources, year-cover photos
+  and depth maps) stay **inline as `data:` URIs** deliberately: `file://` images
+  taint canvases and `texImage2D` from a tainted source throws. Inline copies are
+  recompressed to texture-appropriate sizes at build time (the hero keeps full
+  fidelity).
+
+Asset emission is incremental (content-hash stamp in `dist/assets/.stamp.json`)
+and degrades gracefully without Pillow (JPEG-only, uncompressed GL payload).
+
+## The site
+
+- **Monument intro** — the film reel runs full-bleed behind the name as
+  translucent glass (Anton), settling on the hero. Glitch effects fire on their
+  own schedule, like signal stutter — never cursor-driven.
+- **Work index** — one full-viewport cover per year, each with a bespoke
+  treatment grown from its photograph:
+  - **2026** — the year reflected in his eye; hover domes the cornea out,
+    click dives through the pupil.
+  - **2025** — the fisheye stairwell swirls like a drain; click spins you down.
+  - **2024** — a folded print; the year sits as a faded red stamp, hovering her
+    hand presses wrinkles into the paper, click crumples the sheet into her grip.
+- **Year galleries** — calm grids, FLIP lightbox (images fly from their grid
+  slot to center and back), caption slots wired for publication/client metadata.
+
+All WebGL degrades to flat photography on context loss, no-WebGL browsers,
+and `prefers-reduced-motion`.
 
 ## Project layout
 
 ```
-index.html            # the promoted variant, self-contained (open this)
-dist/                 # built variants + comparison menu (gitignored)
+index.html            # promoted variant, works from repo root
+dist/                 # built output (gitignored): variants, pages, assets/, menu.html
 src/
-  variants/           # one HTML/CSS/JS template per design, __PLACEHOLDER__ tokens
-    01-cinematic.html
-    02-titles.html
-  build.py            # injects data into every variant -> dist/, promotes MAIN -> index.html
+  variants/           # one self-contained template per design direction
+  pages/              # year gallery pages (2026/2025/2024)
+  decisions.json      # the design decision tree (renders as dist/menu.html)
+  build.py            # asset pipeline + template fill + menu
   data/
-    imgdata.json      # base64 photos
+    imgdata.json      # source photos (base64) + hero pointer
+    covers.json       # year-cover photos, depth maps, anchor coords
     depthlayers.json  # hero depth map + focal point
-    aglyph.json       # extracted Archivo Black "A" outline + star path
-    font_b64.txt      # embedded Archivo Black (woff2, base64)
+    aglyph.json       # Archivo A outline + star (aglyph_anton.json for Anton)
+    font_b64.txt      # embedded woff2 (font_anton_b64.txt for Anton)
 ```
 
-## Rebuild
+## Process
 
-```bash
-python3 src/build.py
-```
+Design directions are explored as parallel variant files and judged on the
+decision graph (`dist/menu.html`), driven by `src/decisions.json` — each choice
+opens the next, the chosen path locks left to right. Depth maps for new cover
+photos are generated locally with Depth Anything V2.
 
-Rebuilds every variant in `src/variants/` into `dist/`, regenerates the `dist/index.html` menu, and copies the `MAIN` variant to the root `index.html`. Adding a design = duplicate a variant file, rename it (`NN-name.html`), rebuild.
-
-> Placeholder credits, client names, and the contact email are stand-ins to be replaced with real details.
+> Placeholder credits, year membership, and contact details are stand-ins until
+> the real selects and metadata land.

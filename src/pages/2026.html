@@ -88,7 +88,7 @@
 </div>
 
 <script>
-const IMG = __IMGDATA__;
+const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on gallery pages */
 (function(){
   /* prototype: the 2026 set = first 14 images; real data will carry year + captions */
   var order = Object.keys(IMG).slice(0, 14);
@@ -98,7 +98,7 @@ const IMG = __IMGDATA__;
   order.forEach(function(k, i){
     var im = IMG[k], d = document.createElement('div');
     d.className = 'frame'; d.dataset.i = i;
-    d.innerHTML = '<img loading="lazy" src="' + im.uri + '" width="' + im.w + '" height="' + im.h + '" alt="Yulissa Benitez, 2026">';
+    d.innerHTML = '<img loading="lazy" src="' + im.src + '"'+(im.srcset ? ' srcset="' + im.srcset + '" sizes="(max-width:520px) 100vw, (max-width:820px) 50vw, 33vw"' : '')+' width="' + im.w + '" height="' + im.h + '" alt="Yulissa Benitez, 2026">';
     g.appendChild(d);
   });
   document.getElementById('count').textContent = order.length + ' SELECTS';
@@ -169,7 +169,7 @@ const IMG = __IMGDATA__;
   function show(i){
     idx = (i + order.length) % order.length;
     var k = order[idx];
-    lbImg.src = IMG[k].uri;
+    lbImg.src = IMG[k].src;
     lbImg.style.transition = 'none'; lbImg.style.transform = ''; setRect(centerRect(k));
     void lbImg.offsetWidth; lbImg.style.transition = '';
     restoreSource(); hideSource(idx);
@@ -181,7 +181,7 @@ const IMG = __IMGDATA__;
     idx = (i + order.length) % order.length;
     var k = order[idx];
     lbImg.classList.remove('lb-anim');
-    lbImg.src = IMG[k].uri;
+    lbImg.src = IMG[k].src;
     meta(k);
     lb.classList.add('open'); lb.setAttribute('aria-hidden','false');
     var src = gridImg(idx);

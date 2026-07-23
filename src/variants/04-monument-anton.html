@@ -175,7 +175,8 @@
 </div>
 
 <script>
-const IMG = __IMGDATA__;
+const IMG = __IMGDATA__;      /* inline data: URIs — WebGL-safe on file:// */
+const FILES = __IMGFILES__;   /* real files + srcset for display images */
 const DEPTH = __DEPTH__;
 const HERO = '__HERO__';
 (function(){
@@ -216,6 +217,7 @@ const HERO = '__HERO__';
   var GL=null;
   (function initGL(){
     var cv=document.getElementById('gl');
+    cv.addEventListener('webglcontextlost',function(ev){ev.preventDefault();html.classList.add('nogl');});
     var gl=cv.getContext('webgl',{antialias:true,alpha:false,premultipliedAlpha:false});
     if(!gl){ html.classList.add('nogl'); return; }
     var maxTex=gl.getParameter(gl.MAX_TEXTURE_SIZE);
@@ -483,7 +485,7 @@ const HERO = '__HERO__';
   /* gallery — every photo except the hero (it opens the page) */
   var order=Object.keys(IMG).filter(function(k){return k!==HERO;});
   var g=document.getElementById('gallery');
-  order.forEach(function(k,i){var im=IMG[k];var d=document.createElement('div');d.className='frame';d.dataset.i=i;
+  order.forEach(function(k,i){var im=FILES[k]||IMG[k];var d=document.createElement('div');d.className='frame';d.dataset.i=i;
     d.innerHTML='<img loading="lazy" decoding="async" src="'+im.uri+'" width="'+im.w+'" height="'+im.h+'" alt="">';g.appendChild(d);});
 
   /* ---------- intro state machine: boot -> reel -> hero ---------- */
@@ -510,7 +512,7 @@ const HERO = '__HERO__';
     window.addEventListener('resize',setSpacer); }
   else { wrapH=document.body.scrollHeight; window.addEventListener('resize',function(){wrapH=document.body.scrollHeight;}); }
 
-  var tmx=0,tmy=0,mx=0,my=0,ptx=0,pty=0,vel=0;
+  var tmx=0,tmy=0,mx=0,my=0,vel=0,nextGlitch=2400;
   /* interference state: cursor uv + a randomized reaction pool. A hard flick
      fires ONE random effect (never the same twice running): 0 tracking tear,
      1 v-hold roll, 2 solarize flash, 3 pixel-sort streaks, 4 ghost echo,
@@ -568,12 +570,12 @@ const HERO = '__HERO__';
     else sc=window.scrollY;
 
     mx+=(tmx-mx)*0.06; my+=(tmy-my)*0.06;
-    /* cursor speed -> aberration: fast attack, slow release, clean at rest */
-    var dvx=tmx-ptx, dvy=tmy-pty; ptx=tmx; pty=tmy;
-    var velT=clamp(Math.sqrt(dvx*dvx+dvy*dvy)*26,0,1);
-    vel+=(velT-vel)*(velT>vel?0.28:0.045);
+    /* the glitch fires on its own every few seconds — a signal stutter, not a cursor toy */
+    if(!REDUCE&&now>=nextGlitch){ vel=1;
+      nextGlitch=now+(Math.random()<0.35?160+Math.random()*140:3200+Math.random()*3800); }
+    vel*=0.945;
     curX=(tmx+1)/2; curY=1-(tmy+1)/2;
-    if(velT>0.55&&fxCool<=0){
+    if(vel>0.55&&fxCool<=0){  /* fx ride the autonomous glitch pulse now */
       do{ fxType=Math.floor(Math.random()*7); }while(fxType===fxLast);
       fxLast=fxType; fx=1; fxY=curY; fxSeed=Math.random(); fxCool=0.55;
     }
@@ -634,7 +636,7 @@ const HERO = '__HERO__';
   var lb=document.getElementById('lightbox'),lbImg=document.getElementById('lbImg'),
       lbCount=document.getElementById('lbCount'),idx=0;
   function smear(){lbImg.classList.remove('lb-anim');void lbImg.offsetWidth;lbImg.classList.add('lb-anim');}
-  function show(i){idx=(i+order.length)%order.length;lbImg.src=IMG[order[idx]].uri;
+  function show(i){idx=(i+order.length)%order.length;var _lk=order[idx];lbImg.src=(FILES[_lk]&&FILES[_lk].src)||IMG[_lk].uri;
     lbCount.textContent=String(idx+1).padStart(2,'0')+' / '+String(order.length).padStart(2,'0');smear();}
   function open(i){show(i);lb.classList.add('open');lb.setAttribute('aria-hidden','false');}
   function close(){lb.classList.remove('open');lb.setAttribute('aria-hidden','true');}
