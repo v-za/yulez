@@ -23,6 +23,9 @@
     --display:"Blocky","Arial Black",Helvetica,Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","Menlo","Consolas",monospace;
     --ease:cubic-bezier(.16,.84,.32,1);
+    --brand-opacity:.76;
+    --star-size:16px;
+    --star-opacity:.64;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:auto}
@@ -44,12 +47,12 @@
   .wordmark{font-family:var(--display);font-weight:400;font-size:clamp(.82rem,2.6vw,1.02rem);
     letter-spacing:.16em;line-height:1;color:var(--bone);text-decoration:none;
     opacity:0;transition:opacity .6s;pointer-events:none;white-space:nowrap}
-  /* seat the star-A to the caps: match cap height, sit on the baseline, no extra bulk */
-  .wordmark .ca{display:inline-block;width:.49em;height:.72em;vertical-align:-.01em;margin:0 -.02em}
+  /* Anton's cap height is .8594em: preserve that box so the custom A matches every cap. */
+  .wordmark .ca{display:inline-block;width:.4854em;height:.8594em;vertical-align:-.015em;margin:0 -.02em}
   .wordmark .cbody{fill:currentColor}
   .wordmark .cstar{fill:var(--ink)}
   .wordmark:hover{color:var(--red)}
-  html.ready .wordmark{opacity:.92;pointer-events:auto}
+  html.ready .wordmark{opacity:var(--brand-opacity);pointer-events:auto}
   .sitenav{display:flex;gap:clamp(16px,2.6vw,26px);opacity:0;transition:opacity .6s;pointer-events:none}
   html.ready .sitenav{opacity:1;pointer-events:auto}
   .sitenav a{font-family:var(--mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;
@@ -68,15 +71,15 @@
   /* JS positions #cursor via inline transform — the twinkle animation must
      live on an inner wrapper or its transform overrides the positioning */
   #cursor{position:fixed;top:0;left:0;z-index:710;pointer-events:none;
-    width:18px;height:18px;margin:-9px 0 0 -9px;color:var(--red);opacity:.8;
-    filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));
-    transition:width .28s var(--ease),height .28s var(--ease)}
+    width:var(--star-size);height:var(--star-size);
+    margin:calc(var(--star-size) / -2) 0 0 calc(var(--star-size) / -2);
+    color:var(--red);opacity:var(--star-opacity);
+    filter:drop-shadow(0 1px 6px rgba(0,0,0,.5))}
   #cursor .tw{display:block;width:100%;height:100%;
     animation:starTwinkle 2.6s ease-in-out infinite}
   #cursor svg{display:block;width:100%;height:100%}
-  #cursor.view{width:30px;height:30px;margin:-15px 0 0 -15px}
-  @keyframes starTwinkle{0%,100%{transform:scale(1) rotate(0deg)}
-    50%{transform:scale(1.18) rotate(14deg)}}
+  @keyframes starTwinkle{0%,100%{transform:rotate(0deg)}
+    50%{transform:rotate(14deg)}}
   @media (prefers-reduced-motion:reduce){#cursor{animation:none}}
   html:not(.cursor-on) #cursor{display:none}
 
@@ -613,6 +616,7 @@ const HERO = '__HERO__';
 
   /* ---------- intro state machine: boot -> reel -> hero ---------- */
   var MODE='boot', reelT0=0, heroT0=0, heroPan=0, pageT0=performance.now();
+  var fastT0=0, fastFromP=0, fastRequested=false, FAST_DUR=.9;
   /* ?t=SECONDS starts the reel that far in — screenshot/debug hook, unused normally */
   var DBG_T=parseFloat((location.search.match(/[?&]t=([\d.]+)/)||[])[1]||0)*1000;
   function goHero(now,pan){ MODE='hero'; heroT0=now; heroPan=pan||0; crispName();
@@ -627,17 +631,23 @@ const HERO = '__HERO__';
         setTimeout(function(){ cvEl.style.transition=''; },320); }
     }
     setTimeout(function(){html.classList.add('ready');},350); }
-  function skipIntro(){ if(MODE==='hero'||REDUCE)return;
+  function finishIntroNow(){ if(MODE==='hero'||REDUCE)return;
     MODE='hero'; heroT0=performance.now()-2000; heroPan=0; crispName();
     html.classList.add('playing','ready'); }
+  function fastForwardIntro(){
+    if(MODE==='hero'||MODE==='fast'||REDUCE)return;
+    if(MODE==='boot'){fastRequested=true;return;}
+    var now=performance.now(), st=reelPhys((now-reelT0)/1000);
+    fastFromP=st.p;fastT0=now;MODE='fast';
+  }
   document.getElementById('wordmark').addEventListener('click',function(e){
     e.preventDefault(); window.scrollTo(0,0); });
   document.getElementById('navWork').addEventListener('click',function(e){
-    e.preventDefault(); if(MODE!=='hero') skipIntro();
+    e.preventDefault(); if(MODE!=='hero') finishIntroNow();
     var el=document.getElementById('yc2026');
     if(el) window.scrollTo(0,el.offsetTop); });
-  addEventListener('pointerdown',skipIntro);
-  addEventListener('keydown',function(e){if(MODE!=='hero')skipIntro();});
+  addEventListener('pointerdown',fastForwardIntro);
+  addEventListener('keydown',function(e){if(MODE!=='hero')fastForwardIntro();});
   if(REDUCE){ html.classList.add('noanim','ready'); MODE='hero'; heroT0=-1e6; }
 
   /* returning from a year page (05-covers.html#yc20XX): no intro replay —
@@ -649,7 +659,7 @@ const HERO = '__HERO__';
     function go(){
       var el=document.getElementById(target);
       if(!el) return;
-      skipIntro();
+      finishIntroNow();
       var y=el.offsetTop;
       window.scrollTo(0,y); cur=y;
     }
@@ -664,7 +674,7 @@ const HERO = '__HERO__';
   hnCount();
   function heroNav(dir){
     if(bAnim) return;
-    if(MODE!=='hero'){ skipIntro(); return; }
+    if(MODE!=='hero'){ fastForwardIntro(); return; }
     var to=bIdx+dir;
     if(to<0||to>=BROWSE.length) return;
     var k=BROWSE[to];
@@ -775,8 +785,12 @@ const HERO = '__HERO__';
     /* shutter arrival: flash for ~2 frames, blades open over 260ms, ease-out */
     var bt=now-reelT0;
     var shu=bt>=260?1:(function(u){return 1-Math.pow(1-u,3);})(Math.max(0,bt)/260);
+    var fastElapsed=MODE==='fast'?(now-fastT0)/1000:0;
+    var fastFlash=MODE==='fast'
+      ?Math.pow(Math.max(0,Math.sin(fastElapsed*70)),8)*.28*(1-.45*clamp(fastElapsed/FAST_DUR,0,1))
+      :0;
     gl.uniform1f(U.uShut,shu);
-    gl.uniform1f(U.uBFlash,Math.max(0,1-bt/90));
+    gl.uniform1f(U.uBFlash,Math.max(Math.max(0,1-bt/90),fastFlash));
     gl.uniform1f(U.uPos,st.p);
     gl.uniform1f(U.uBlur,Math.min(0.45,Math.abs(st.v)/26));
     gl.uniform1f(U.uFinalMix,clamp((st.p-(TARGET-0.6))/0.5,0,1));
@@ -841,13 +855,23 @@ const HERO = '__HERO__';
     fx*=Math.exp(-3.2*dt); fxCool-=dt;
     if(GL && GL.ready()){
       if(MODE==='boot'){
-        if(GL.atlasReady()){ MODE='reel'; reelT0=now-DBG_T; html.classList.add('playing'); }
+        if(GL.atlasReady()){
+          MODE='reel'; reelT0=now-DBG_T; html.classList.add('playing');
+          if(fastRequested)fastForwardIntro();
+        }
         else if(now-pageT0>4500){ html.classList.add('playing'); goHero(now,0); }
       }
-      if(MODE==='reel'){
-        var rt=(now-reelT0)/1000, st=reelPhys(rt);
+      if(MODE==='reel'||MODE==='fast'){
+        var rt=(now-reelT0)/1000, st, fastDone=false;
+        if(MODE==='fast'){
+          var fu=clamp((now-fastT0)/(FAST_DUR*1000),0,1), rem=TARGET-fastFromP;
+          var fe=1-Math.pow(1-fu,2.2);
+          st={p:fastFromP+rem*fe,x:-rem*(1-fe),
+            v:fu<1?rem*2.2*Math.pow(1-fu,1.2)/FAST_DUR:0};
+          fastDone=fu>=1;
+        }else st=reelPhys(rt);
         nameByVel(st.v);
-        if(rt>1.0 && Math.abs(st.x)<0.02 && Math.abs(st.v)<0.12){
+        if(fastDone||(MODE==='reel'&&rt>1.0&&Math.abs(st.x)<0.02&&Math.abs(st.v)<0.12)){
           goHero(now,st.x); drawHero(now); }
         else drawReel(now,st);
       }

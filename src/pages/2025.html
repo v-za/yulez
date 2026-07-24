@@ -18,6 +18,9 @@
     --display:"Blocky","Arial Black",Helvetica,Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","Menlo","Consolas",monospace;
     --ease:cubic-bezier(.16,.84,.32,1);
+    --brand-opacity:.76;
+    --star-size:16px;
+    --star-opacity:.64;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--ink);color:var(--bone);
@@ -33,16 +36,32 @@
   @keyframes land{to{opacity:0}}
   @media (prefers-reduced-motion:reduce){body::after{display:none}}
 
-  header{position:sticky;top:0;z-index:500;display:flex;align-items:baseline;gap:22px;
-    padding:16px clamp(16px,4vw,54px);background:rgba(10,10,13,.9);backdrop-filter:blur(12px);
+  header{position:sticky;top:0;z-index:500;display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:20px;
+    min-height:58px;padding:11px clamp(16px,4vw,54px);
+    background:rgba(10,10,13,.82);backdrop-filter:blur(18px) saturate(1.2);
     border-bottom:1px solid var(--line)}
-  header a{color:rgba(245,239,230,.6);text-decoration:none;font-family:var(--mono);
-    font-size:.66rem;letter-spacing:.22em;text-transform:uppercase}
+  header::after{content:"";position:absolute;right:clamp(16px,4vw,54px);bottom:-1px;
+    width:clamp(38px,5vw,68px);height:1px;background:var(--red);opacity:.72}
+  header a{color:rgba(245,239,230,.58);text-decoration:none;font-family:var(--mono);
+    font-size:.61rem;letter-spacing:.22em;text-transform:uppercase}
   header a:hover{color:var(--red)}
-  header h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(1.6rem,4vw,2.6rem);
-    letter-spacing:.02em;color:var(--red)}
-  header .n{margin-left:auto;font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;
-    color:rgba(245,239,230,.45)}
+  header .back{justify-self:start;white-space:nowrap}
+  header .wm{justify-self:center;font-family:var(--display);font-size:.78rem;letter-spacing:.14em;
+    color:var(--bone);opacity:var(--brand-opacity);white-space:nowrap}
+  header .wm .ca{display:inline-block;width:.4854em;height:.8594em;vertical-align:-.015em;margin:0 -.02em}
+  header .wm .cbody{fill:currentColor}
+  header .wm .cstar{fill:var(--ink)}
+  header .meta{justify-self:end;display:flex;align-items:baseline;gap:13px;white-space:nowrap}
+  header h1{margin:0;font-family:var(--display);font-weight:400;font-size:1.24rem;
+    line-height:1;letter-spacing:.045em;color:var(--red)}
+  header .n{font-family:var(--mono);font-size:.57rem;letter-spacing:.18em;
+    color:rgba(245,239,230,.42)}
+  @media (max-width:560px){
+    header{grid-template-columns:1fr 0 1fr;gap:0}
+    header .wm{display:none}
+    header .n{font-size:.52rem}
+  }
 
   .gallery{columns:3 300px;column-gap:0}
   .frame{position:relative;margin:0;break-inside:avoid;overflow:hidden;background:var(--ink-2);line-height:0;cursor:pointer}
@@ -84,20 +103,21 @@
   /* the cursor IS the star — the same one that lives in the A. Always. */
   html.starcur, html.starcur *{cursor:none !important}
   #staru{position:fixed;left:0;top:0;z-index:950;pointer-events:none;opacity:0;
-    width:18px;height:18px;margin:-9px 0 0 -9px;color:var(--red);
+    width:var(--star-size);height:var(--star-size);
+    margin:calc(var(--star-size) / -2) 0 0 calc(var(--star-size) / -2);
+    color:var(--red);
     filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));transition:opacity .25s;
     animation:starTwinkle 2.6s ease-in-out infinite}
   #staru svg{display:block;width:100%;height:100%}
-  #staru.big{width:26px;height:26px;margin:-13px 0 0 -13px}
-  @keyframes starTwinkle{0%,100%{transform:scale(1) rotate(0deg)}
-    50%{transform:scale(1.18) rotate(14deg)}}
+  @keyframes starTwinkle{0%,100%{transform:rotate(0deg)}
+    50%{transform:rotate(14deg)}}
   @media (prefers-reduced-motion:reduce){#staru{animation:none}}
 </style>
 
 <header>
-  <a href="05-covers.html#yc2025">&larr; Back</a>
-  <h1>2025</h1>
-  <span class="n" id="count"></span>
+  <a class="back" href="05-covers.html#yc2025">&larr; Index</a>
+  <a class="wm" href="05-covers.html">YULISS<svg class="ca" viewBox="0 0 994 1760" aria-hidden="true"><g transform="matrix(1 0 0 -1 0 1760)"><path class="cbody" d="__AGLYPH_OUTER_ANTON__"/><path class="cstar" d="__AGLYPH_STAR_ANTON__"/></g></svg>&nbsp;BENITEZ</a>
+  <div class="meta"><h1>2025</h1><span class="n" id="count"></span></div>
 </header>
 <div class="gallery" id="gallery"></div>
 
@@ -255,10 +275,7 @@ const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on galler
     var sx = innerWidth/2, sy = innerHeight/2, tx = sx, ty = sy, seen = false;
     addEventListener('mousemove', function(e){
       tx = e.clientX; ty = e.clientY;
-      if (!seen){ seen = true; sx = tx; sy = ty; star.style.opacity = .8; }
-      var t2 = e.target;
-      star.classList.toggle('big',
-        !!(t2 && (t2.tagName === 'IMG' || t2.closest('a,button'))));
+      if (!seen){ seen = true; sx = tx; sy = ty; star.style.opacity = 'var(--star-opacity)'; }
     }, {passive: true});
     addEventListener('mouseout', function(e){ if (!e.relatedTarget){ seen = false; star.style.opacity = 0; } });
     (function follow(){

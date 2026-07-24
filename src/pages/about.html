@@ -20,6 +20,9 @@
     --display:"Blocky","Arial Black",Helvetica,Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","Menlo","Consolas",monospace;
     --ease:cubic-bezier(.16,.84,.32,1);
+    --brand-opacity:.76;
+    --star-size:16px;
+    --star-opacity:.64;
     /* the typographic ladder — the system the whole site adopts as copy lands */
     --t-display:clamp(3.4rem,9vw,7.5rem);
     --t-section:clamp(1.5rem,3.4vw,2.4rem);
@@ -42,8 +45,8 @@
     font-size:var(--t-micro);letter-spacing:.22em;text-transform:uppercase}
   header a.back:hover{color:var(--red)}
   header .wm{margin-left:auto;font-family:var(--display);font-size:1rem;letter-spacing:.16em;
-    color:var(--bone);text-decoration:none}
-  header .wm .ca{display:inline-block;width:.49em;height:.72em;vertical-align:-.01em;margin:0 -.02em}
+    color:var(--bone);text-decoration:none;opacity:var(--brand-opacity)}
+  header .wm .ca{display:inline-block;width:.4854em;height:.8594em;vertical-align:-.015em;margin:0 -.02em}
   header .wm .cbody{fill:currentColor}
   header .wm .cstar{fill:var(--ink)}
   @media (max-width:560px){
@@ -77,13 +80,14 @@
 
   html.starcur, html.starcur *{cursor:none !important}
   #staru{position:fixed;left:0;top:0;z-index:950;pointer-events:none;opacity:0;
-    width:18px;height:18px;margin:-9px 0 0 -9px;color:var(--red);
+    width:var(--star-size);height:var(--star-size);
+    margin:calc(var(--star-size) / -2) 0 0 calc(var(--star-size) / -2);
+    color:var(--red);
     filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));transition:opacity .25s;
     animation:starTwinkle 2.6s ease-in-out infinite}
   #staru svg{display:block;width:100%;height:100%}
-  #staru.big{width:26px;height:26px;margin:-13px 0 0 -13px}
-  @keyframes starTwinkle{0%,100%{transform:scale(1) rotate(0deg)}
-    50%{transform:scale(1.18) rotate(14deg)}}
+  @keyframes starTwinkle{0%,100%{transform:rotate(0deg)}
+    50%{transform:rotate(14deg)}}
   @media (prefers-reduced-motion:reduce){#staru{animation:none}}
 </style>
 
@@ -126,9 +130,7 @@ if (matchMedia('(pointer:fine)').matches) (function(){
   var sx = innerWidth/2, sy = innerHeight/2, tx = sx, ty = sy, seen = false;
   addEventListener('mousemove', function(e){
     tx = e.clientX; ty = e.clientY;
-    if (!seen){ seen = true; sx = tx; sy = ty; star.style.opacity = .8; }
-    var t2 = e.target;
-    star.classList.toggle('big', !!(t2 && t2.closest('a,button')));
+    if (!seen){ seen = true; sx = tx; sy = ty; star.style.opacity = 'var(--star-opacity)'; }
   }, {passive: true});
   addEventListener('mouseout', function(e){ if (!e.relatedTarget){ seen = false; star.style.opacity = 0; } });
   (function follow(){
