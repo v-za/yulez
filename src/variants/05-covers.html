@@ -40,7 +40,9 @@
   .wordmark{position:fixed;top:clamp(14px,2.6vh,26px);left:clamp(16px,4vw,54px);z-index:760;
     font-family:var(--display);font-weight:400;font-size:1.02rem;letter-spacing:.16em;
     color:var(--bone);text-decoration:none;opacity:0;transition:opacity .6s;pointer-events:none}
-  .wordmark i{font-style:normal;color:var(--red)}
+  .wordmark .ca{display:inline-block;width:.4854em;height:.8594em;vertical-align:baseline}
+  .wordmark .cbody{fill:currentColor}
+  .wordmark .cstar{fill:#0b0b0e}
   .wordmark:hover{color:var(--red)}
   html.ready .wordmark{opacity:.92;pointer-events:auto}
   .sitenav{position:fixed;top:clamp(16px,2.8vh,28px);right:clamp(16px,4vw,54px);z-index:760;
@@ -256,9 +258,9 @@
 </div>
 <div id="spacer"></div>
 
-<a class="wordmark" href="#" id="wordmark">YU<i>&#10022;</i>LEZ</a>
+<a class="wordmark" href="#" id="wordmark">YULISS<svg class="ca" viewBox="0 0 994 1760" aria-hidden="true"><g transform="matrix(1 0 0 -1 0 1760)"><path class="cbody" d="__AGLYPH_OUTER_ANTON__"/><path class="cstar" d="__AGLYPH_STAR_ANTON__"/></g></svg>&nbsp;BENITEZ</a>
 <nav class="sitenav" aria-label="Site">
-  <a href="#" id="navWork">Work</a><a href="about.html">About</a><a href="about.html#contact">Contact</a>
+  <a href="about.html">About</a>
 </nav>
 
 <div id="cursor"><svg viewBox="0 0 247 235" aria-hidden="true"><path d="M 123.6 0.0 L 94.4 89.8 L 0.0 89.8 L 76.4 145.3 L 47.2 235.2 L 123.6 179.7 L 200.0 235.2 L 170.8 145.3 L 247.2 89.8 L 152.8 89.8 Z" fill="currentColor"/></svg></div>
@@ -614,9 +616,6 @@ const HERO = '__HERO__';
     html.classList.add('playing','ready'); }
   document.getElementById('wordmark').addEventListener('click',function(e){
     e.preventDefault(); window.scrollTo(0,0); });
-  document.getElementById('navWork').addEventListener('click',function(e){
-    e.preventDefault(); var el=document.getElementById('yc2026');
-    if(el) window.scrollTo(0,el.offsetTop); });
   addEventListener('pointerdown',skipIntro);
   addEventListener('keydown',function(e){if(MODE!=='hero')skipIntro();});
   if(REDUCE){ html.classList.add('noanim','ready'); MODE='hero'; heroT0=-1e6; }
