@@ -54,10 +54,13 @@
   html.cursor-on .wordmark,html.cursor-on .sitenav a{cursor:none}
 
   html.cursor-on, html.cursor-on *{cursor:none !important}
+  /* JS positions #cursor via inline transform — the twinkle animation must
+     live on an inner wrapper or its transform overrides the positioning */
   #cursor{position:fixed;top:0;left:0;z-index:710;pointer-events:none;
     width:18px;height:18px;margin:-9px 0 0 -9px;color:var(--red);
     filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));
-    transition:width .28s var(--ease),height .28s var(--ease);
+    transition:width .28s var(--ease),height .28s var(--ease)}
+  #cursor .tw{display:block;width:100%;height:100%;
     animation:starTwinkle 2.6s ease-in-out infinite}
   #cursor svg{display:block;width:100%;height:100%}
   #cursor.view{width:30px;height:30px;margin:-15px 0 0 -15px}
@@ -263,7 +266,7 @@
   <a href="about.html">About</a>
 </nav>
 
-<div id="cursor"><svg viewBox="0 0 247 235" aria-hidden="true"><path d="M 123.6 0.0 L 94.4 89.8 L 0.0 89.8 L 76.4 145.3 L 47.2 235.2 L 123.6 179.7 L 200.0 235.2 L 170.8 145.3 L 247.2 89.8 L 152.8 89.8 Z" fill="currentColor"/></svg></div>
+<div id="cursor"><span class="tw"><svg viewBox="0 0 247 235" aria-hidden="true"><path d="M 123.6 0.0 L 94.4 89.8 L 0.0 89.8 L 76.4 145.3 L 47.2 235.2 L 123.6 179.7 L 200.0 235.2 L 170.8 145.3 L 247.2 89.8 L 152.8 89.8 Z" fill="currentColor"/></svg></span></div>
 
 <div id="lightbox" aria-hidden="true">
   <button class="lb-close" aria-label="Close">&times;</button>
