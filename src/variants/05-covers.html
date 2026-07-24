@@ -47,8 +47,9 @@
   .wordmark{font-family:var(--display);font-weight:400;font-size:clamp(.82rem,2.6vw,1.02rem);
     letter-spacing:.16em;line-height:1;color:var(--bone);text-decoration:none;
     opacity:0;transition:opacity .6s;pointer-events:none;white-space:nowrap}
-  /* Anton's cap height is .8594em: preserve that box so the custom A matches every cap. */
-  .wordmark .ca{display:inline-block;width:.4854em;height:.8594em;vertical-align:-.015em;margin:0 -.02em}
+  /* Slight optical reduction: the triangular A reads larger than its measured cap box. */
+  .wordmark .ca{display:inline-block;width:.466em;height:.825em;
+    vertical-align:calc(-.015em - .5px);margin:0 -.02em}
   .wordmark .cbody{fill:currentColor}
   .wordmark .cstar{fill:var(--ink)}
   .wordmark:hover{color:var(--red)}
@@ -1013,18 +1014,18 @@ const HERO = '__HERO__';
     ' col*=1.0-0.32*uHov*smoothstep(0.6,0.12,rr);',
     ' vec2 en=e/uCtrR;',
     ' vec2 tuv=en*0.5+0.5;',
-    ' tuv=0.5+(tuv-0.5)*(1.0+0.38*dot(en,en));',
+    /* optically enlarge the reflected year and keep it legible before hover */
+    ' tuv=0.5+(tuv-0.5)*(0.94+0.34*dot(en,en));',
     ' tuv+=(0.0025+0.0035*uHov)*vec2(sin(uTime*55.0+uv.y*90.0),cos(uTime*43.0));',
     ' float mask=smoothstep(1.0,0.7,rr);',
     ' float tx=texture2D(uTxt,clamp(tuv,0.0,1.0)).r*mask;',
     ' float tx2=texture2D(uTxt,clamp(tuv+vec2(0.045,0.04),0.0,1.0)).r*mask;',
-    ' float glow=(0.5+0.5*lum)*uReveal;',
-    ' col+=vec3(0.93,0.96,1.0)*tx*glow*(0.5+0.5*uHov);',
-    ' col+=vec3(0.93,0.96,1.0)*tx2*glow*0.16;',
+    ' float glow=(0.68+0.32*lum)*uReveal;',
+    ' col*=1.0-0.10*tx*uReveal;',
+    ' col+=vec3(0.96,0.98,1.0)*tx*glow*(0.82+0.30*uHov);',
+    ' col+=vec3(0.93,0.96,1.0)*tx2*glow*0.10;',
     ' float txr=texture2D(uTxt,clamp(tuv+vec2(0.02,0.0),0.0,1.0)).r*mask;',
     ' col+=vec3(1.0,0.13,0.09)*(txr-tx)*0.22*uReveal;',
-    ' float ring=smoothstep(0.09,0.0,abs(rr-1.5))*(0.09+0.05*sin(uTime*40.0))*uReveal*(1.0-uHov);',
-    ' col+=vec3(1.0,0.14,0.09)*ring;',
     ' col=mix(col,vec3(0.008,0.008,0.012),clamp(uWarpB*1.4,0.0,1.0)*smoothstep(0.25,1.0,tt));'
   ].join('\n');
 
@@ -1052,9 +1053,7 @@ const HERO = '__HERO__';
     ' float glow=(0.55+0.45*lum)*uReveal;',
     ' col+=vec3(0.95,0.93,0.9)*tx*glow*(0.55+0.45*uHov);',
     ' float txr=texture2D(uTxt,clamp(tuv+vec2(0.02,0.0),0.0,1.0)).r*mask;',
-    ' col+=vec3(1.0,0.13,0.09)*(txr-tx)*0.25*uReveal;',
-    ' float ring=smoothstep(0.09,0.0,abs(length(en)-1.45))*(0.09+0.05*sin(uTime*40.0))*uReveal*(1.0-uHov);',
-    ' col+=vec3(1.0,0.14,0.09)*ring;'
+    ' col+=vec3(1.0,0.13,0.09)*(txr-tx)*0.25*uReveal;'
   ].join('\n');
 
   var FRAG_PAPER=[
@@ -1121,10 +1120,6 @@ const HERO = '__HERO__';
     ' vec3 col=mix(colRaw,lit,lightMix);',
     /* red ink breathes into the emboss only while engaged */
     ' col+=vec3(1.0,0.13,0.09)*th*(0.34+0.30*max(W,B))*uReveal;',
-    /* locator ring at the hand — matches the eye/well marks on the other covers */
-    ' float hr=rd0/(uCtrR*1.9);',
-    ' float ring=smoothstep(0.10,0.0,abs(hr-1.0))*(0.085+0.05*sin(uTime*40.0))*uReveal*(1.0-uHov);',
-    ' col+=vec3(1.0,0.14,0.09)*ring;',
     /* depth cues for the reach: surroundings recede, the hand catches light */
     ' col*=1.0-0.22*RCH*smoothstep(0.22,0.85,rd0);',
     ' col+=vec3(0.08,0.075,0.07)*RCH*rf;',
