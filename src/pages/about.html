@@ -68,6 +68,17 @@
   ul.clients{columns:2;padding:0;margin:0;list-style:none;max-width:62ch}
   ul.clients li{font-size:var(--t-caption);color:rgba(245,239,230,.55);padding:3px 0}
   @media (max-width:560px){ul.clients{columns:1}}
+
+  html.starcur, html.starcur *{cursor:none !important}
+  #staru{position:fixed;left:0;top:0;z-index:950;pointer-events:none;opacity:0;
+    width:18px;height:18px;margin:-9px 0 0 -9px;color:var(--red);
+    filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));transition:opacity .25s;
+    animation:starTwinkle 2.6s ease-in-out infinite}
+  #staru svg{display:block;width:100%;height:100%}
+  #staru.big{width:26px;height:26px;margin:-13px 0 0 -13px}
+  @keyframes starTwinkle{0%,100%{transform:scale(1) rotate(0deg)}
+    50%{transform:scale(1.18) rotate(14deg)}}
+  @media (prefers-reduced-motion:reduce){#staru{animation:none}}
 </style>
 
 <header>
@@ -100,3 +111,24 @@
   <p class="caption" style="margin-top:70px">Site: custom WebGL, no frameworks.
   Type set in Anton. Photographs remain &copy; Yulissa Benitez.</p>
 </main>
+
+<div id="staru" aria-hidden="true"><svg viewBox="0 0 247 235" aria-hidden="true"><path d="M 123.6 0.0 L 94.4 89.8 L 0.0 89.8 L 76.4 145.3 L 47.2 235.2 L 123.6 179.7 L 200.0 235.2 L 170.8 145.3 L 247.2 89.8 L 152.8 89.8 Z" fill="currentColor"/></svg></div>
+<script>
+if (matchMedia('(pointer:fine)').matches) (function(){
+  document.documentElement.classList.add('starcur');
+  var star = document.getElementById('staru');
+  var sx = innerWidth/2, sy = innerHeight/2, tx = sx, ty = sy, seen = false;
+  addEventListener('mousemove', function(e){
+    tx = e.clientX; ty = e.clientY;
+    if (!seen){ seen = true; sx = tx; sy = ty; star.style.opacity = 1; }
+    var t2 = e.target;
+    star.classList.toggle('big', !!(t2 && t2.closest('a,button')));
+  }, {passive: true});
+  addEventListener('mouseout', function(e){ if (!e.relatedTarget){ seen = false; star.style.opacity = 0; } });
+  (function follow(){
+    sx += (tx - sx) * 0.3; sy += (ty - sy) * 0.3;
+    star.style.left = sx.toFixed(1) + 'px'; star.style.top = sy.toFixed(1) + 'px';
+    requestAnimationFrame(follow);
+  })();
+})();
+</script>

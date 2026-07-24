@@ -80,15 +80,17 @@
   .lb-bar .cap{color:rgba(245,239,230,.85);letter-spacing:.08em}
 
 
-  /* over any photo the cursor gains a little star companion — the same ✦ the
-     marquee and the A carry. Just a wink, no instrumentation. */
-  body.starred .frame, body.starred #lightbox, body.starred #lightbox img{cursor:none}
+
+  /* the cursor IS the star — the same one that lives in the A. Always. */
+  html.starcur, html.starcur *{cursor:none !important}
   #staru{position:fixed;left:0;top:0;z-index:950;pointer-events:none;opacity:0;
-    font-size:22px;line-height:1;color:var(--red);margin:-11px 0 0 -11px;
-    text-shadow:0 1px 8px rgba(0,0,0,.55);transition:opacity .22s;
-    animation:starTwinkle 2.2s ease-in-out infinite}
+    width:18px;height:18px;margin:-9px 0 0 -9px;color:var(--red);
+    filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));transition:opacity .25s;
+    animation:starTwinkle 2.6s ease-in-out infinite}
+  #staru svg{display:block;width:100%;height:100%}
+  #staru.big{width:26px;height:26px;margin:-13px 0 0 -13px}
   @keyframes starTwinkle{0%,100%{transform:scale(1) rotate(0deg)}
-    50%{transform:scale(1.25) rotate(18deg)}}
+    50%{transform:scale(1.18) rotate(14deg)}}
   @media (prefers-reduced-motion:reduce){#staru{animation:none}}
 </style>
 
@@ -107,7 +109,7 @@
   <div class="lb-bar"><span id="lbCount"></span><span class="cap" id="lbCap"></span></div>
 </div>
 
-<div id="staru" aria-hidden="true">&#10022;</div>
+<div id="staru" aria-hidden="true"><svg viewBox="0 0 247 235" aria-hidden="true"><path d="M 123.6 0.0 L 94.4 89.8 L 0.0 89.8 L 76.4 145.3 L 47.2 235.2 L 123.6 179.7 L 200.0 235.2 L 170.8 145.3 L 247.2 89.8 L 152.8 89.8 Z" fill="currentColor"/></svg></div>
 
 <script>
 const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on gallery pages */
@@ -246,21 +248,19 @@ const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on galler
     else if(e.key === 'ArrowLeft') show(idx-1);
   });
 
-  /* ---- star cursor companion ---- */
+  /* ---- the A-star as the cursor, everywhere on the page ---- */
   if (matchMedia('(pointer:fine)').matches) (function(){
+    document.documentElement.classList.add('starcur');
     var star = document.getElementById('staru');
-    var sx = -100, sy = -100, tx = -100, ty = -100, on = false;
+    var sx = innerWidth/2, sy = innerHeight/2, tx = sx, ty = sy, seen = false;
     addEventListener('mousemove', function(e){
-      var t2 = e.target;
-      var over = t2 && t2.tagName === 'IMG' && (t2.closest('.frame') || t2.closest('#lightbox'));
-      on = !!(over && !flying);
       tx = e.clientX; ty = e.clientY;
-      star.style.opacity = on ? 1 : 0;
-      document.body.classList.toggle('starred', on);
+      if (!seen){ seen = true; sx = tx; sy = ty; star.style.opacity = 1; }
+      var t2 = e.target;
+      star.classList.toggle('big',
+        !!(t2 && (t2.tagName === 'IMG' || t2.closest('a,button'))));
     }, {passive: true});
-    addEventListener('mouseout', function(e){
-      if (!e.relatedTarget){ on = false; star.style.opacity = 0; document.body.classList.remove('starred'); }
-    });
+    addEventListener('mouseout', function(e){ if (!e.relatedTarget){ seen = false; star.style.opacity = 0; } });
     (function follow(){
       sx += (tx - sx) * 0.3; sy += (ty - sy) * 0.3;
       star.style.left = sx.toFixed(1) + 'px'; star.style.top = sy.toFixed(1) + 'px';
