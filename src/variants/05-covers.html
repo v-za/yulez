@@ -550,6 +550,22 @@ const HERO = '__HERO__';
   addEventListener('keydown',function(e){if(MODE!=='hero')skipIntro();});
   if(REDUCE){ html.classList.add('noanim','ready'); MODE='hero'; heroT0=-1e6; }
 
+  /* returning from a year page (05-covers.html#yc20XX): no intro replay —
+     skip straight to hero mode and land on that year's cover */
+  (function(){
+    var m=(location.hash||'').match(/^#(yc20\d\d)$/);
+    if(!m) return;
+    var target=m[1];
+    function go(){
+      var el=document.getElementById(target);
+      if(!el) return;
+      skipIntro();
+      var y=el.offsetTop;
+      window.scrollTo(0,y); cur=y;
+    }
+    addEventListener('load',function(){ requestAnimationFrame(go); });
+  })();
+
   /* ---- hero browse: whip-pan left/right through the reel set ---- */
   var BROWSE=REEL.map(function(cl){return cl.img;}).filter(Boolean);
   var bIdx=BROWSE.length-1, bAnim=null, bCache={};
@@ -934,10 +950,11 @@ const HERO = '__HERO__';
     /* REACH: the hand rises out of the print toward you, as if to take the year.
        Magnifying the region around it = it comes closer; the sheet around it
        falls into shadow so the hand reads as nearer than the paper. */
-    ' float RCH=uHov;',
+    ' float idle=0.5+0.5*sin(uTime*16.0);',
+    ' float RCH=max(uHov,0.12*idle*uReveal);',
     ' float rd0=length(vec2(uv.x-HAND.x,(uv.y-HAND.y)/uImgAspect));',
-    ' float rf=exp(-rd0*rd0/0.085);',
-    ' uv=HAND+(uv-HAND)*(1.0-0.34*RCH*rf);',
+    ' float rf=exp(-rd0*rd0/0.10);',
+    ' uv=HAND+(uv-HAND)*(1.0-0.40*RCH*rf);',
     /* click: the sheet scrunches INTO the hand, cell-irregular */
     ' vec2 toC=uv-HAND;',
     ' uv=HAND+toC*(1.0-0.5*B*(0.8+0.4*vn(uv*3.0+7.7)));',
@@ -967,7 +984,7 @@ const HERO = '__HERO__';
     ' float em=0.22+0.78*max(W,B);',
     ' nrm=normalize(nrm+vec3((thx-th)*0.9*em,(thy-th)*0.9*em,0.0));',
     /* how much of the lit-paper render mixes over the crisp original */
-    ' float lightMix=clamp(amp*2.2+em*th*1.4,0.0,1.0);',
+    ' float lightMix=clamp(amp*2.2+em*th*1.4+0.08*idle*uReveal+0.25*RCH*rf,0.0,1.0);',
     /* crisp original — the resting state IS the photograph */
     ' vec3 colRaw=texture2D(uImg,uv).rgb;',
     /* lit paper: displaced print, fiber, raking light, valley shadow */
@@ -986,8 +1003,8 @@ const HERO = '__HERO__';
     /* red ink breathes into the emboss only while engaged */
     ' col+=vec3(1.0,0.13,0.09)*th*(0.34+0.30*max(W,B))*uReveal;',
     /* depth cues for the reach: surroundings recede, the hand catches light */
-    ' col*=1.0-0.30*RCH*smoothstep(0.20,0.85,rd0);',
-    ' col+=vec3(0.07,0.065,0.06)*RCH*rf;',
+    ' col*=1.0-0.22*RCH*smoothstep(0.22,0.85,rd0);',
+    ' col+=vec3(0.08,0.075,0.07)*RCH*rf;',
     /* crumpling: the room darkens around the ball forming in her hand */
     ' col=mix(col,vec3(0.01,0.01,0.012),B*smoothstep(0.28,0.85,length(toC)*2.0));'
   ].join('\n');
@@ -1132,6 +1149,7 @@ const HERO = '__HERO__';
       var es={x:(CTR.u-0.5)/s.x+0.5, y:1-((CTR.v-0.5)/s.y+0.5)};
       if(gazeTick) gazeTick(now,es,r.width/Math.max(1,r.height));
       var hovT=0;
+      if(/hovdbg/.test(location.search)) hovT=1;   /* pixel-verification hook */
       /* touch has no hover — the covers animate on timing instead, so mobile
          gets the same life (dome / swirl / reach) the cursor gives desktop */
       if(!FINE&&!entering&&!REDUCE) hovT=0.5-0.5*Math.cos(now*0.0016);
@@ -1144,7 +1162,7 @@ const HERO = '__HERO__';
          collapsing it — the mobile equivalent of parking the cursor on it */
       if(gazeHold&&!entering) hovT=gazeHov;
       if(REDUCE) hovT=0;
-      hov+=(hovT-hov)*0.07;
+      hov+=(hovT-hov)*(hovT>hov?0.10:0.16);   /* fast settle when you leave */
       var w={z:0,b:0,rot:0,f:0};
       if(entering){
         var pE=Math.min(1,(now-enterT0)/cfg.dur);
