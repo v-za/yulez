@@ -255,7 +255,7 @@ const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on galler
     var sx = innerWidth/2, sy = innerHeight/2, tx = sx, ty = sy, seen = false;
     addEventListener('mousemove', function(e){
       tx = e.clientX; ty = e.clientY;
-      if (!seen){ seen = true; sx = tx; sy = ty; star.style.opacity = 1; }
+      if (!seen){ seen = true; sx = tx; sy = ty; star.style.opacity = .8; }
       var t2 = e.target;
       star.classList.toggle('big',
         !!(t2 && (t2.tagName === 'IMG' || t2.closest('a,button'))));

@@ -37,27 +37,38 @@
   #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--red);z-index:750;pointer-events:none}
 
   /* ---------- frame: wordmark + site nav (placeholder-ready) ---------- */
-  .wordmark{position:fixed;top:clamp(14px,2.6vh,26px);left:clamp(16px,4vw,54px);z-index:760;
-    font-family:var(--display);font-weight:400;font-size:1.02rem;letter-spacing:.16em;
-    color:var(--bone);text-decoration:none;opacity:0;transition:opacity .6s;pointer-events:none}
-  .wordmark .ca{display:inline-block;width:.4854em;height:.8594em;vertical-align:baseline}
+  /* one flex bar holds wordmark + nav so they share a baseline on every viewport */
+  .frame-top{position:fixed;top:0;left:0;right:0;z-index:760;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:clamp(13px,2.4vh,24px) clamp(16px,4vw,54px);pointer-events:none}
+  .wordmark{font-family:var(--display);font-weight:400;font-size:clamp(.82rem,2.6vw,1.02rem);
+    letter-spacing:.16em;line-height:1;color:var(--bone);text-decoration:none;
+    opacity:0;transition:opacity .6s;pointer-events:none;white-space:nowrap}
+  /* seat the star-A to the caps: match cap height, sit on the baseline, no extra bulk */
+  .wordmark .ca{display:inline-block;width:.49em;height:.72em;vertical-align:-.01em;margin:0 -.02em}
   .wordmark .cbody{fill:currentColor}
-  .wordmark .cstar{fill:#0b0b0e}
+  .wordmark .cstar{fill:var(--ink)}
   .wordmark:hover{color:var(--red)}
   html.ready .wordmark{opacity:.92;pointer-events:auto}
-  .sitenav{position:fixed;top:clamp(16px,2.8vh,28px);right:clamp(16px,4vw,54px);z-index:760;
-    display:flex;gap:clamp(14px,2.4vw,26px);opacity:0;transition:opacity .6s;pointer-events:none}
+  .sitenav{display:flex;gap:clamp(16px,2.6vw,26px);opacity:0;transition:opacity .6s;pointer-events:none}
   html.ready .sitenav{opacity:1;pointer-events:auto}
   .sitenav a{font-family:var(--mono);font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;
-    color:rgba(245,239,230,.6);text-decoration:none}
+    color:rgba(245,239,230,.6);text-decoration:none;line-height:1}
   .sitenav a:hover{color:var(--red)}
+  html.ready .frame-top{pointer-events:none}
+  html.ready .frame-top .wordmark,html.ready .frame-top .sitenav a{pointer-events:auto}
   html.cursor-on .wordmark,html.cursor-on .sitenav a{cursor:none}
+  @media (max-width:560px){
+    .wordmark{font-size:.66rem;letter-spacing:.08em}
+    .sitenav a{font-size:.56rem;letter-spacing:.16em}
+    .sitenav{gap:14px}
+  }
 
   html.cursor-on, html.cursor-on *{cursor:none !important}
   /* JS positions #cursor via inline transform — the twinkle animation must
      live on an inner wrapper or its transform overrides the positioning */
   #cursor{position:fixed;top:0;left:0;z-index:710;pointer-events:none;
-    width:18px;height:18px;margin:-9px 0 0 -9px;color:var(--red);
+    width:18px;height:18px;margin:-9px 0 0 -9px;color:var(--red);opacity:.8;
     filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));
     transition:width .28s var(--ease),height .28s var(--ease)}
   #cursor .tw{display:block;width:100%;height:100%;
@@ -81,7 +92,7 @@
   html:not(.smooth) .cover,html:not(.smooth) .ycover{scroll-snap-align:start}
 
   /* ---------- reel hero ---------- */
-  .cover{position:relative;height:100svh;width:100%;overflow:hidden;background:var(--ink)}
+  .cover{position:relative;height:100dvh;width:100%;overflow:hidden;background:var(--ink)}
   .flat{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:68% center;z-index:0;
     opacity:0}
   html.nogl .flat{opacity:1}
@@ -149,7 +160,7 @@
   html.ready .skiphint{opacity:0}
 
   /* ---------- year cover (work index prototype) ---------- */
-  .ycover{position:relative;height:100svh;overflow:hidden;background:var(--ink);cursor:pointer}
+  .ycover{position:relative;height:100dvh;overflow:hidden;background:var(--ink);cursor:pointer}
   .ycover canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
   .yflat{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
   html.nogl .yflat{display:block}
@@ -261,10 +272,12 @@
 </div>
 <div id="spacer"></div>
 
-<a class="wordmark" href="#" id="wordmark">YULISS<svg class="ca" viewBox="0 0 994 1760" aria-hidden="true"><g transform="matrix(1 0 0 -1 0 1760)"><path class="cbody" d="__AGLYPH_OUTER_ANTON__"/><path class="cstar" d="__AGLYPH_STAR_ANTON__"/></g></svg>&nbsp;BENITEZ</a>
-<nav class="sitenav" aria-label="Site">
-  <a href="#" id="navWork">Work</a><a href="about.html">About</a>
-</nav>
+<div class="frame-top">
+  <a class="wordmark" href="#" id="wordmark">YULISS<svg class="ca" viewBox="0 0 994 1760" aria-hidden="true"><g transform="matrix(1 0 0 -1 0 1760)"><path class="cbody" d="__AGLYPH_OUTER_ANTON__"/><path class="cstar" d="__AGLYPH_STAR_ANTON__"/></g></svg>&nbsp;BENITEZ</a>
+  <nav class="sitenav" aria-label="Site">
+    <a href="#" id="navWork">Work</a><a href="about.html">About</a>
+  </nav>
+</div>
 
 <div id="cursor"><span class="tw"><svg viewBox="0 0 247 235" aria-hidden="true"><path d="M 123.6 0.0 L 94.4 89.8 L 0.0 89.8 L 76.4 145.3 L 47.2 235.2 L 123.6 179.7 L 200.0 235.2 L 170.8 145.3 L 247.2 89.8 L 152.8 89.8 Z" fill="currentColor"/></svg></span></div>
 
