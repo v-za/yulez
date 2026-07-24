@@ -128,6 +128,18 @@
     font-family:var(--mono);font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;
     color:rgba(245,239,230,.75);display:flex;gap:16px;align-items:baseline}
   .ymeta em{font-style:normal;color:var(--red);font-weight:700}
+  /* the affordance: identical cue, identical position, on every cover — learn it
+     once and all the years pay off. Retreats the moment you engage. */
+  .yhint{position:absolute;right:clamp(16px,4vw,54px);bottom:clamp(18px,4vh,44px);z-index:3;
+    display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:.6rem;
+    letter-spacing:.24em;text-transform:uppercase;color:rgba(245,239,230,.5);
+    opacity:0;transition:opacity .5s var(--ease);pointer-events:none}
+  html.ready .ycover.live .yhint{opacity:1}
+  .ycover.engaged .yhint{opacity:0;transition-duration:.25s}
+  .yhint i{width:5px;height:5px;border-radius:50%;background:var(--red);
+    animation:hintPulse 1.9s ease-in-out infinite}
+  @keyframes hintPulse{0%,100%{opacity:.35;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
+  @media (prefers-reduced-motion:reduce){.yhint i{animation:none;opacity:.8}}
 
   /* ---------- marquee ---------- */
   .marquee-band{border-block:1px solid var(--line);padding:clamp(18px,3vw,30px) 0;overflow:hidden;background:var(--ink-2)}
@@ -198,17 +210,20 @@
   <section class="ycover" id="yc2026">
     <canvas id="ycv2026"></canvas>
     <img class="yflat" id="yfl2026" alt="">
-    <div class="ymeta"><em>WORK</em><span>2026 &mdash; 14 SELECTS &middot; find his eye</span></div>
+    <div class="ymeta"><em>WORK</em><span>2026 &mdash; 14 SELECTS</span></div>
+    <div class="yhint" aria-hidden="true"><i></i>HOVER THE EYE</div>
   </section>
   <section class="ycover" id="yc2025">
     <canvas id="ycv2025"></canvas>
     <img class="yflat" id="yfl2025" alt="">
-    <div class="ymeta"><em>WORK</em><span>2025 &mdash; 12 SELECTS &middot; down the stairwell</span></div>
+    <div class="ymeta"><em>WORK</em><span>2025 &mdash; 12 SELECTS</span></div>
+    <div class="yhint" aria-hidden="true"><i></i>HOVER THE WELL</div>
   </section>
   <section class="ycover" id="yc2024">
     <canvas id="ycv2024"></canvas>
     <img class="yflat" id="yfl2024" alt="">
-    <div class="ymeta"><em>WORK</em><span>2024 &mdash; 10 SELECTS &middot; press the paper</span></div>
+    <div class="ymeta"><em>WORK</em><span>2024 &mdash; 10 SELECTS</span></div>
+    <div class="yhint" aria-hidden="true"><i></i>HOVER THE HAND</div>
   </section>
 
 </div>
@@ -354,6 +369,7 @@ const HERO = '__HERO__';
       'uniform sampler2D uAtlas;uniform sampler2D uImg;',
       'uniform vec2 uRes;uniform float uPos;uniform float uBlur;uniform float uFinalMix;',
       'uniform float uImgAspect;uniform float uTime;',
+      'uniform float uShut;uniform float uBFlash;',
       'uniform sampler2D uMask;uniform float uMaskAmt;uniform float uMaskSoft;',
       'uniform vec2 uGrid;uniform float uNP;',
       'varying vec2 vUv;',
@@ -395,6 +411,14 @@ const HERO = '__HERO__';
       ' col=mix(col,mix(mix(col,vec3(0.93,0.91,0.88),0.25),col*0.78,mk(vUv,uMaskSoft)),uMaskAmt);',
       ' float g=fract(sin(dot(vUv+fract(uTime),vec2(12.9898,78.233)))*43758.5453);',
       ' col+=(g-0.5)*0.05;',
+      /* the page arrives like a camera firing: twin shutter blades snap open
+         from center with a hot edge, over the reel already mid-flight */
+      ' float half_=clamp(uShut,0.0,1.0)*0.52;',
+      ' float dx=abs(vUv.x-0.5);',
+      ' float inside=smoothstep(half_+0.006,half_-0.006,dx);',
+      ' float lip=smoothstep(0.035,0.0,abs(dx-half_))*step(uShut,0.999);',
+      ' col=col*inside+vec3(0.9,0.88,0.85)*lip*0.35;',
+      ' col+=vec3(0.96,0.95,0.93)*uBFlash;',
       ' gl_FragColor=vec4(col,1.0);',
       '}'].join('\n'));
     if(!vs||!heroFs||!reelFs){ html.classList.add('nogl'); return; }
@@ -407,7 +431,7 @@ const HERO = '__HERO__';
     function uniforms(pr,names){var u={};names.forEach(function(n){u[n]=gl.getUniformLocation(pr,n);});
       u._p=gl.getAttribLocation(pr,'p');return u;}
     var heroU=uniforms(heroPr,['uImg','uDepth','uFocal','uRes','uZoom','uImgAspect','uTime','uReveal','uPan','uVel','uMask','uMaskAmt','uMaskSoft','uCur','uFx','uFxType','uFxY','uFxSeed']);
-    var reelU=uniforms(reelPr,['uAtlas','uImg','uRes','uPos','uBlur','uFinalMix','uImgAspect','uTime','uMask','uMaskAmt','uMaskSoft','uGrid','uNP']);
+    var reelU=uniforms(reelPr,['uAtlas','uImg','uRes','uPos','uBlur','uFinalMix','uImgAspect','uTime','uMask','uMaskAmt','uMaskSoft','uGrid','uNP','uShut','uBFlash']);
     gl.useProgram(heroPr);gl.uniform1i(heroU.uImg,0);gl.uniform1i(heroU.uDepth,1);gl.uniform1i(heroU.uMask,3);
     gl.useProgram(reelPr);gl.uniform1i(reelU.uImg,0);gl.uniform1i(reelU.uAtlas,2);gl.uniform1i(reelU.uMask,3);
     gl.uniform2f(reelU.uGrid,COLS,ROWS);gl.uniform1f(reelU.uNP,NP);
@@ -542,6 +566,16 @@ const HERO = '__HERO__';
   /* ?t=SECONDS starts the reel that far in — screenshot/debug hook, unused normally */
   var DBG_T=parseFloat((location.search.match(/[?&]t=([\d.]+)/)||[])[1]||0)*1000;
   function goHero(now,pan){ MODE='hero'; heroT0=now; heroPan=pan||0; crispName();
+    /* the strike: the still lands like a press hit — one glitch pulse and a
+       4px frame jolt that snaps back. Skipped for reduced motion. */
+    if(!REDUCE && pan!==undefined && MODE==='hero'){
+      vel=1;
+      var cvEl=document.getElementById('gl');
+      if(cvEl){ cvEl.style.transition='none'; cvEl.style.transform='translateY(5px)';
+        setTimeout(function(){ cvEl.style.transition='transform 240ms cubic-bezier(.2,.9,.25,1)';
+          cvEl.style.transform='translateY(0)'; },30);
+        setTimeout(function(){ cvEl.style.transition=''; },320); }
+    }
     setTimeout(function(){html.classList.add('ready');},350); }
   function skipIntro(){ if(MODE==='hero'||REDUCE)return;
     MODE='hero'; heroT0=performance.now()-2000; heroPan=0; crispName();
@@ -682,6 +716,11 @@ const HERO = '__HERO__';
   function drawReel(now,st){ var gl=GL.gl,U=GL.reelU;
     gl.useProgram(GL.reelPr);
     gl.enableVertexAttribArray(U._p);gl.vertexAttribPointer(U._p,2,gl.FLOAT,false,0,0);
+    /* shutter arrival: flash for ~2 frames, blades open over 260ms, ease-out */
+    var bt=now-reelT0;
+    var shu=bt>=260?1:(function(u){return 1-Math.pow(1-u,3);})(Math.max(0,bt)/260);
+    gl.uniform1f(U.uShut,shu);
+    gl.uniform1f(U.uBFlash,Math.max(0,1-bt/90));
     gl.uniform1f(U.uPos,st.p);
     gl.uniform1f(U.uBlur,Math.min(0.45,Math.abs(st.v)/26));
     gl.uniform1f(U.uFinalMix,clamp((st.p-(TARGET-0.6))/0.5,0,1));
@@ -1002,6 +1041,10 @@ const HERO = '__HERO__';
     ' vec3 col=mix(colRaw,lit,lightMix);',
     /* red ink breathes into the emboss only while engaged */
     ' col+=vec3(1.0,0.13,0.09)*th*(0.34+0.30*max(W,B))*uReveal;',
+    /* locator ring at the hand — matches the eye/well marks on the other covers */
+    ' float hr=rd0/(uCtrR*1.9);',
+    ' float ring=smoothstep(0.10,0.0,abs(hr-1.0))*(0.085+0.05*sin(uTime*40.0))*uReveal*(1.0-uHov);',
+    ' col+=vec3(1.0,0.14,0.09)*ring;',
     /* depth cues for the reach: surroundings recede, the hand catches light */
     ' col*=1.0-0.22*RCH*smoothstep(0.22,0.85,rd0);',
     ' col+=vec3(0.08,0.075,0.07)*RCH*rf;',
@@ -1077,11 +1120,12 @@ const HERO = '__HERO__';
       cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);
       gl.viewport(0,0,cv.width,cv.height);}
     var CTR={u:C.ex,v:1-C.ey};
-    var mx=0,my=0,cx=-1,cy=-1,hov=0,entering=0,enterT0=0;
+    var mx=0,my=0,pcx=-1e4,pcy=-1e4,cx=-1,cy=-1,hov=0,entering=0,enterT0=0,wasLive=false,wasEng=false;
     if(FINE){
-      sec.addEventListener('mousemove',function(e){var r=sec.getBoundingClientRect();
-        cx=(e.clientX-r.left)/r.width;cy=(e.clientY-r.top)/r.height;},{passive:true});
-      sec.addEventListener('mouseleave',function(){cx=cy=-1;});
+      /* client coords only — section-relative position derives from the LIVE
+         rect each frame, so transform-scroll can never strand a stale hover */
+      addEventListener('mousemove',function(e){pcx=e.clientX;pcy=e.clientY;},{passive:true});
+      document.addEventListener('mouseleave',function(){pcx=pcy=-1e4;});
     }
     /* touch: there is no cursor, so the cover performs one deliberate beat on
        a loop — bulge, the pupil looks around, it returns to place, unbulge,
@@ -1148,6 +1192,11 @@ const HERO = '__HERO__';
       var s=fitScale();
       var es={x:(CTR.u-0.5)/s.x+0.5, y:1-((CTR.v-0.5)/s.y+0.5)};
       if(gazeTick) gazeTick(now,es,r.width/Math.max(1,r.height));
+      cx=-1; cy=-1;
+      if(pcx>-9000){
+        cx=(pcx-r.left)/r.width; cy=(pcy-r.top)/r.height;
+        if(cx<0||cx>1||cy<0||cy>1){ cx=-1; cy=-1; }
+      }
       var hovT=0;
       if(/hovdbg/.test(location.search)) hovT=1;   /* pixel-verification hook */
       /* touch has no hover — the covers animate on timing instead, so mobile
@@ -1162,7 +1211,16 @@ const HERO = '__HERO__';
          collapsing it — the mobile equivalent of parking the cursor on it */
       if(gazeHold&&!entering) hovT=gazeHov;
       if(REDUCE) hovT=0;
+      var mid=(r.top+r.height/2-vh/2)/vh;
+      var reveal=REDUCE?1:Math.max(0,1-Math.abs(mid)*2.2);
+      if(ok<3) reveal=0;
       hov+=(hovT-hov)*(hovT>hov?0.10:0.16);   /* fast settle when you leave */
+      /* affordance state: the cue appears when this cover owns the screen,
+         and retreats once the visitor has found the interaction */
+      var liveNow=reveal>0.55;
+      if(liveNow!==wasLive){ sec.classList.toggle('live',liveNow); wasLive=liveNow; }
+      var eng=hov>0.35;
+      if(eng!==wasEng){ sec.classList.toggle('engaged',eng); wasEng=eng; }
       var w={z:0,b:0,rot:0,f:0};
       if(entering){
         var pE=Math.min(1,(now-enterT0)/cfg.dur);
@@ -1171,9 +1229,6 @@ const HERO = '__HERO__';
       }
       var cu=-5,cw=-5;
       if(cx>=0){ cu=(cx-0.5)*s.x+0.5; cw=((1-cy)-0.5)*s.y+0.5; }
-      var mid=(r.top+r.height/2-vh/2)/vh;
-      var reveal=REDUCE?1:Math.max(0,1-Math.abs(mid)*2.2);
-      if(ok<3) reveal=0;
       gl.uniform2f(U.uRes,cv.width,cv.height);
       gl.uniform2f(U.uMouse,mx,-my);
       gl.uniform2f(U.uCtr,CTR.u,CTR.v);
@@ -1205,7 +1260,7 @@ const HERO = '__HERO__';
     hovR:0.34,dur:1150,url:'2025.html',
     dive:function(p){return {z:p*p*p*22,b:Math.min(0.85,p*1.0),rot:p*p*9.0,f:flashAt(p,0.78)};}});
   mkCover({key:'2024',sec:'yc2024',cv:'ycv2024',flat:'yfl2024',frag:FRAG_PAPER,
-    hovR:99,dur:1100,url:'2024.html',
+    hovR:0.34,dur:1100,url:'2024.html',
     dive:function(p){var e=p*p*(3.0-2.0*p);return {z:e*0.35,b:e,rot:0,f:flashAt(p,0.82)};}});
 })();
 </script>
