@@ -289,7 +289,7 @@ const HERO = '__HERO__';
     mx+=(tmx-mx)*0.06; my+=(tmy-my)*0.06;
     /* the glitch fires on its own every few seconds — a signal stutter, not a cursor toy */
     if(!REDUCE&&now>=nextGlitch){ vel=1;
-      nextGlitch=now+(Math.random()<0.35?160+Math.random()*140:3200+Math.random()*3800); }
+      nextGlitch=now+(Math.random()<0.45?150+Math.random()*130:1500+Math.random()*2000); }
     vel*=0.945;
     if(GL && GL.ready()){
       var gl=GL.gl,U=GL.U;
