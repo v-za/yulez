@@ -95,6 +95,19 @@ for k, v in imgs.items():
     stamp[k] = h
     asset_bytes += jpg.stat().st_size
 stamp_path.write_text(json.dumps(stamp))
+
+# social share card: hero photo, center-crop 1200x630
+if HAVE_PIL:
+    og_path = dist / "assets" / "og.jpg"
+    if not og_path.exists():
+        raw = base64.b64decode(imgs[HERO_KEY]["uri"].split(",", 1)[1])
+        im = Image.open(io.BytesIO(raw)).convert("RGB")
+        tw, th = 1200, 630
+        s = max(tw / im.width, th / im.height)
+        im = im.resize((round(im.width * s), round(im.height * s)))
+        x, y = (im.width - tw) // 2, (im.height - th) // 2
+        im.crop((x, y, x + tw, y + th)).save(og_path, "JPEG", quality=84, optimize=True)
+        print("assets: og.jpg (1200x630 share card)")
 print(f"assets: {len(imgs)} images -> dist/assets/img "
       f"({asset_bytes/1024/1024:.1f} MB jpg{' + webp renditions' if HAVE_PIL else ', no Pillow: webp skipped'})")
 

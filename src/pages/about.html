@@ -1,0 +1,102 @@
+<title>Yulissa Benitez — About</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b0b0e'/%3E%3Ctext x='50' y='74' font-size='72' text-anchor='middle' fill='%23ff2116'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
+<meta property="og:title" content="Yulissa Benitez — About">
+<meta property="og:description" content="NYC photographer. Music, editorial, youth culture — eight years of work.">
+<meta property="og:image" content="https://v-za.github.io/yulez/assets/og.jpg">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://v-za.github.io/yulez/about.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="NYC photographer. Music, editorial, youth culture — eight years of work.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- about/contact — structural placeholder; copy arrives with the archive.
+     This page also seeds the typographic ladder: display / section / body /
+     caption / micro, as CSS vars the rest of the site will adopt. -->
+<style>
+  @font-face{font-family:"Blocky";src:url(__FONT_ANTON__) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+  :root{
+    --ink:#0b0b0e; --ink-2:#101014;
+    --line:rgba(240,232,220,.11);
+    --bone:#f5efe6; --red:#ff2116;
+    --display:"Blocky","Arial Black",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono","Menlo","Consolas",monospace;
+    --ease:cubic-bezier(.16,.84,.32,1);
+    /* the typographic ladder — the system the whole site adopts as copy lands */
+    --t-display:clamp(3.4rem,9vw,7.5rem);
+    --t-section:clamp(1.5rem,3.4vw,2.4rem);
+    --t-body:clamp(1rem,1.35vw,1.15rem);
+    --t-caption:.82rem;
+    --t-micro:.62rem;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--bone);
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;z-index:600;pointer-events:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
+    opacity:.05;mix-blend-mode:screen}
+  ::selection{background:var(--red);color:#0b0b0e}
+
+  header{position:sticky;top:0;z-index:500;display:flex;align-items:baseline;gap:22px;
+    padding:16px clamp(16px,4vw,54px);background:rgba(10,10,13,.9);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line)}
+  header a.back{color:rgba(245,239,230,.6);text-decoration:none;font-family:var(--mono);
+    font-size:var(--t-micro);letter-spacing:.22em;text-transform:uppercase}
+  header a.back:hover{color:var(--red)}
+  header .wm{margin-left:auto;font-family:var(--display);font-size:1rem;letter-spacing:.16em;
+    color:var(--bone);text-decoration:none}
+  header .wm i{font-style:normal;color:var(--red)}
+
+  main{max-width:880px;margin:0 auto;padding:clamp(40px,8vh,90px) clamp(18px,5vw,54px) 120px}
+  h1{font-family:var(--display);font-weight:400;text-transform:uppercase;line-height:.9;
+    font-size:var(--t-display);margin:0 0 8px;color:var(--red)}
+  .kicker{font-family:var(--mono);font-size:var(--t-micro);letter-spacing:.26em;
+    text-transform:uppercase;color:rgba(245,239,230,.45);margin:0 0 clamp(34px,6vh,64px)}
+
+  h2{font-family:var(--display);font-weight:400;text-transform:uppercase;
+    font-size:var(--t-section);letter-spacing:.02em;margin:clamp(40px,7vh,70px) 0 14px}
+  p.body{font-size:var(--t-body);line-height:1.72;color:rgba(245,239,230,.86);
+    max-width:62ch;margin:0 0 1.1em}
+  .caption{font-size:var(--t-caption);line-height:1.55;color:rgba(245,239,230,.55);max-width:62ch}
+
+  /* placeholder slots — visibly unfinished on purpose, styled like contact-sheet notes */
+  .tbd{border:1px dashed rgba(255,33,22,.35);padding:14px 16px;margin:10px 0 0;
+    font-family:var(--mono);font-size:var(--t-caption);letter-spacing:.06em;
+    color:rgba(245,239,230,.5)}
+  .tbd b{color:var(--red);font-weight:400;letter-spacing:.2em}
+
+  .contact a{color:var(--bone);text-decoration:none;border-bottom:1px solid rgba(255,33,22,.5)}
+  .contact a:hover{color:var(--red)}
+  ul.clients{columns:2;padding:0;margin:0;list-style:none;max-width:62ch}
+  ul.clients li{font-size:var(--t-caption);color:rgba(245,239,230,.55);padding:3px 0}
+  @media (max-width:560px){ul.clients{columns:1}}
+</style>
+
+<header>
+  <a class="back" href="05-covers.html">&larr; Back</a>
+  <a class="wm" href="05-covers.html">YU<i>&#10022;</i>LEZ</a>
+</header>
+
+<main>
+  <h1>About</h1>
+  <p class="kicker">Yulissa Benitez &mdash; New York City</p>
+
+  <p class="body">Photographer working in music, editorial and youth culture.
+  Fisheye lenses, on-camera flash, film grain &mdash; pictures made inside the
+  night rather than about it.</p>
+  <div class="tbd"><b>BIO&nbsp;&mdash;&nbsp;TBD</b> &middot; real copy lands with the archive session. Two short paragraphs max.</div>
+
+  <h2>Selected clients &amp; publications</h2>
+  <ul class="clients">
+    <li>&mdash;</li><li>&mdash;</li><li>&mdash;</li><li>&mdash;</li><li>&mdash;</li><li>&mdash;</li>
+  </ul>
+  <div class="tbd"><b>CREDITS&nbsp;&mdash;&nbsp;TBD</b> &middot; publications, labels, brands; one line each.</div>
+
+  <h2 id="contact">Contact</h2>
+  <p class="body contact">
+    <a href="mailto:hello@example.com">hello@example.com</a><br>
+    <a href="https://instagram.com/" rel="noopener">Instagram &mdash; @&mdash;&mdash;</a>
+  </p>
+  <div class="tbd"><b>CONTACT&nbsp;&mdash;&nbsp;TBD</b> &middot; real email + IG handle from Yulissa. Consider a booking line.</div>
+
+  <p class="caption" style="margin-top:70px">Site: custom WebGL, no frameworks.
+  Type set in Anton. Photographs remain &copy; Yulissa Benitez.</p>
+</main>
