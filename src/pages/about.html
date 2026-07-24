@@ -19,7 +19,12 @@
     --bone:#f5efe6; --red:#ff2116;
     --display:"Blocky","Arial Black",Helvetica,Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","Menlo","Consolas",monospace;
-    --ease:cubic-bezier(.16,.84,.32,1);
+    --dur-fast:180ms;
+    --dur-ui:420ms;
+    --dur-scene:900ms;
+    --ease-out:cubic-bezier(.16,.84,.32,1);
+    --ease-in:cubic-bezier(.55,.02,.74,.34);
+    --ease:var(--ease-out);
     --brand-opacity:.76;
     --star-size:16px;
     --star-opacity:.64;
@@ -46,13 +51,8 @@
   header a.back:hover{color:var(--red)}
   header .wm{margin-left:auto;font-family:var(--display);font-size:1rem;letter-spacing:.16em;
     color:var(--bone);text-decoration:none;opacity:var(--brand-opacity)}
-  header .wm .ca{display:inline-block;width:.466em;height:.825em;
-    vertical-align:calc(-.015em - .5px);margin:0 -.02em}
-  header .wm .cbody{fill:currentColor}
-  header .wm .cstar{fill:var(--ink)}
   @media (max-width:560px){
     header .wm{font-size:.66rem;letter-spacing:.08em}
-    header .wm .ca{vertical-align:.015em}
     header a.back{font-size:.56rem;letter-spacing:.16em}
   }
 
@@ -85,7 +85,8 @@
     width:var(--star-size);height:var(--star-size);
     margin:calc(var(--star-size) / -2) 0 0 calc(var(--star-size) / -2);
     color:var(--red);
-    filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));transition:opacity .25s;
+    filter:drop-shadow(0 1px 6px rgba(0,0,0,.5));
+    transition:opacity var(--dur-fast) var(--ease-out);
     animation:starTwinkle 2.6s ease-in-out infinite}
   #staru svg{display:block;width:100%;height:100%}
   @keyframes starTwinkle{0%,100%{transform:rotate(0deg)}
@@ -95,7 +96,7 @@
 
 <header>
   <a class="back" href="05-covers.html">&larr; Back</a>
-  <a class="wm" href="05-covers.html">YULISS<svg class="ca" viewBox="0 0 994 1760" aria-hidden="true"><g transform="matrix(1 0 0 -1 0 1760)"><path class="cbody" d="__AGLYPH_OUTER_ANTON__"/><path class="cstar" d="__AGLYPH_STAR_ANTON__"/></g></svg>&nbsp;BENITEZ</a>
+  <a class="wm" href="05-covers.html">YULISSA&nbsp;BENITEZ</a>
 </header>
 
 <main>
