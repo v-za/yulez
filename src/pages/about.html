@@ -79,7 +79,17 @@
   ul.clients{columns:2;column-gap:48px;padding:0;margin:0;list-style:none;max-width:58ch}
   ul.clients li{font-size:var(--t-body);line-height:1.9;color:rgba(245,239,230,.62);
     break-inside:avoid}
-  @media (max-width:560px){ul.clients{columns:1}}
+  /* phone: keep two columns (halves the scroll), tighten the vertical rhythm —
+     the desktop air reads as dead zones at 390px */
+  @media (max-width:560px){
+    main{padding:44px 20px 96px}
+    h1{font-size:2.85rem}
+    .kicker{font-size:.95rem;margin-bottom:38px}
+    h2{margin:50px 0 16px}
+    p.body{line-height:1.75}
+    ul.clients{column-gap:28px}
+    ul.clients li{font-size:.95rem;line-height:1.8}
+  }
 
   html.starcur, html.starcur *{cursor:none !important}
   #staru{position:fixed;left:0;top:0;z-index:950;pointer-events:none;opacity:0;
@@ -104,9 +114,8 @@
   <h1>About</h1>
   <p class="kicker">Yulissa Benitez &mdash; New York City</p>
 
-  <p class="body">Mexican-born photographer based in New York City.</p>
-  <p class="body contact">Represented by
-    <a href="https://off-shore.agency" target="_blank" rel="noopener">Offshore Agency</a>.</p>
+  <p class="body contact">Mexican-born photographer based in New York City.
+    Represented by <a href="https://off-shore.agency" target="_blank" rel="noopener">Offshore Agency</a>.</p>
 
   <h2>Selected clients &amp; publications</h2>
   <ul class="clients">
