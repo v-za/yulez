@@ -1,4 +1,5 @@
 <title>Yulissa Benitez — 2025</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -6 247 247'%3E%3Cpath d='M123.6 0 94.4 89.8 0 89.8 76.4 145.3 47.2 235.2 123.6 179.7 200 235.2 170.8 145.3 247.2 89.8 152.8 89.8Z' fill='%23ff2116'/%3E%3C/svg%3E">
 <meta property="og:title" content="Yulissa Benitez — 2025">
 <meta property="og:description" content="NYC photographer. Music, editorial, youth culture — eight years of work.">
@@ -60,9 +61,12 @@
   header .n{font-family:var(--mono);font-size:.57rem;letter-spacing:.18em;
     color:rgba(245,239,230,.42)}
   @media (max-width:560px){
-    header{grid-template-columns:1fr 0 1fr;gap:0}
+    /* two items only (wordmark hidden), so drop the centre track — with the view
+       toggle in .meta the old 1fr/0/1fr grid overflowed into the back link */
+    header{grid-template-columns:auto minmax(0,1fr);gap:10px}
     header .wm{display:none}
-    header .n{font-size:.52rem}
+    header .meta{flex-wrap:wrap;justify-content:flex-end;gap:9px}
+    header .n{display:none}
   }
 
   .gallery{columns:3 300px;column-gap:0}
@@ -87,6 +91,55 @@
   @media (max-width:820px){.gallery{columns:2 220px}}
   @media (max-width:520px){.gallery{columns:1}}
   @media (prefers-reduced-motion:reduce){.frame{opacity:1;transform:none;transition:none}}
+
+
+  /* ---- credits view: the same photos grouped by what they were for ----
+     Quiet register on purpose (see the about page) — this is the view an
+     art director scans, so type does the work, not motion. */
+  .credits{display:none;max-width:900px;margin:0 auto;
+    padding:clamp(30px,5vh,58px) clamp(18px,5vw,54px) 120px}
+  html.view-credits .gallery{display:none}
+  html.view-credits .credits{display:block}
+  .chead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;
+    padding-bottom:10px;border-bottom:1px solid var(--red);
+    font-family:var(--mono);font-size:.56rem;letter-spacing:.2em;
+    text-transform:uppercase;color:rgba(245,239,230,.4)}
+  .crow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 18px;
+    align-items:baseline;padding:22px 0;border-bottom:1px solid var(--line)}
+  .cname{font-family:var(--display);font-weight:400;font-size:1.16rem;
+    letter-spacing:.01em;color:var(--bone);margin:0}
+  .ckind{grid-column:1;font-family:var(--mono);font-size:.58rem;letter-spacing:.16em;
+    text-transform:uppercase;color:rgba(245,239,230,.42)}
+  .cn{grid-row:1;grid-column:2;font-family:var(--mono);font-size:.58rem;
+    letter-spacing:.16em;color:var(--red);white-space:nowrap}
+  .cstrip{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:7px;margin-top:16px}
+  .cthumb{width:86px;height:61px;padding:0;border:0;background:var(--ink-2);
+    overflow:hidden;line-height:0;cursor:pointer;opacity:.62;
+    transition:opacity var(--dur-fast) var(--ease-out)}
+  .cthumb img{width:100%;height:100%;object-fit:cover}
+  .cthumb:hover,.cthumb:focus-visible{opacity:1}
+  .cthumb:focus-visible{outline:1px solid var(--red);outline-offset:1px}
+  @media (max-width:560px){
+    .vtoggle button{padding:3px 5px;font-size:.5rem;letter-spacing:.12em}
+    .prov{font-size:.46rem;margin-left:5px}
+    .credits{padding:24px 20px 96px}
+    .cname{font-size:1rem}
+    .cthumb{width:calc(25% - 6px);height:auto;aspect-ratio:3/2}
+    header .n{display:none}
+  }
+
+  /* view toggle in the header */
+  .vtoggle{display:flex;gap:2px;align-items:center}
+  .vtoggle button{background:none;border:0;padding:4px 7px;color:rgba(245,239,230,.45);
+    font-family:var(--mono);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;
+    cursor:pointer;border-bottom:1px solid transparent;
+    transition:color var(--dur-fast) var(--ease-out),border-color var(--dur-fast) var(--ease-out)}
+  .vtoggle button:hover{color:rgba(245,239,230,.8)}
+  .vtoggle button.on{color:var(--bone);border-bottom-color:var(--red)}
+  html.starcur .vtoggle button{cursor:none}
+  .prov{font-family:var(--mono);font-size:.5rem;letter-spacing:.18em;
+    text-transform:uppercase;color:rgba(255,33,22,.8);border:1px solid rgba(255,33,22,.4);
+    padding:2px 5px;margin-left:8px;vertical-align:2px}
 
   #lightbox{position:fixed;inset:0;z-index:800;background:rgba(6,6,9,.96);
     opacity:0;pointer-events:none;
@@ -133,9 +186,15 @@
 <header>
   <a class="back" href="05-covers.html#yc2025">&larr; Index</a>
   <a class="wm" href="05-covers.html">YULISSA&nbsp;BENITEZ</a>
-  <div class="meta"><h1>2025</h1><span class="n" id="count"></span></div>
+  <div class="meta">
+    <div class="vtoggle" role="tablist" aria-label="View">
+      <button id="vGrid" class="on" role="tab" aria-selected="true">Grid</button>
+      <button id="vCred" role="tab" aria-selected="false">Credits</button>
+    </div>
+    <h1>2025</h1><span class="n" id="count"></span></div>
 </header>
 <div class="gallery" id="gallery"></div>
+<section class="credits" id="credits" aria-label="Credits"></section>
 
 <div id="lightbox" aria-hidden="true">
   <button class="lb-close" aria-label="Close">&times;</button>
@@ -153,12 +212,45 @@ const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on galler
   /* prototype: the 2025 set = first 14 images; real data will carry year + captions */
   var order = Object.keys(IMG).slice(14, 26);
   var CAPS = {};   // key -> "publication / client / location" once metadata exists
+  /* Provisional groupings — invented so the credits layout can be judged before
+     her real metadata lands. Flip PROV to false and replace PROJECTS when it does. */
+  var PROV = true;
+  var PROJECTS = [
+    {
+      "client": "Vogue",
+      "title": "New wave",
+      "kind": "Editorial",
+      "place": "Manhattan",
+      "n": 3
+    },
+    {
+      "client": "Converse",
+      "title": "Block party",
+      "kind": "Commission",
+      "place": "Queens",
+      "n": 4
+    },
+    {
+      "client": "Personal",
+      "title": "Bushwick nights",
+      "kind": "Archive",
+      "place": "",
+      "n": 5
+    }
+  ];
+  var PROJ_OF = {}, PROJ_START = {}, _p = 0;
+  PROJECTS.forEach(function(pr, pi){
+    PROJ_START[pi] = _p;
+    for (var n = 0; n < pr.n && _p < order.length; n++, _p++)
+      PROJ_OF[order[_p]] = pr.client + ' \u2014 ' + pr.title;
+  });
   var YEAR='2025', RM=matchMedia('(prefers-reduced-motion:reduce)').matches;
   var UI_MS=420;
 
   var g = document.getElementById('gallery');
   order.forEach(function(k, i){
-    var im = IMG[k], d = document.createElement('div'), credit=CAPS[k]||'© YULISSA BENITEZ';
+    var im = IMG[k], d = document.createElement('div'),
+        credit=CAPS[k]||PROJ_OF[k]||'© YULISSA BENITEZ';
     d.className = 'frame'; d.dataset.i = i;
     d.tabIndex=0;d.setAttribute('role','button');
     d.setAttribute('aria-label','Open frame '+String(i+1).padStart(2,'0')+', '+YEAR);
@@ -248,7 +340,7 @@ const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on galler
 
   function meta(k){
     lbCount.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(order.length).padStart(2,'0');
-    lbCap.textContent = CAPS[k] || '© YULISSA BENITEZ';
+    lbCap.textContent = CAPS[k] || PROJ_OF[k] || '© YULISSA BENITEZ';
   }
   /* arrows: stay centered, keep the shutter smear */
   function show(i){
@@ -301,6 +393,52 @@ const IMG = __IMGFILES__;  /* real files + srcset — no inline photos on galler
     else if(e.key === 'ArrowRight') show(idx+1);
     else if(e.key === 'ArrowLeft') show(idx-1);
   });
+
+
+  /* ---- credits view ---- */
+  (function(){
+    var host = document.getElementById('credits');
+    if(!host) return;
+    var h = '<div class="chead"><span>Project / publication</span><span>Frames</span></div>';
+    PROJECTS.forEach(function(pr, pi){
+      var start = PROJ_START[pi], keys = order.slice(start, start + pr.n);
+      if(!keys.length) return;
+      h += '<div class="crow">'
+        + '<h2 class="cname">' + pr.client + ' &mdash; ' + pr.title + '</h2>'
+        + '<span class="cn">' + String(keys.length).padStart(2,'0') + '</span>'
+        + '<span class="ckind">' + pr.kind + (pr.place ? ' &middot; ' + pr.place : '') + '</span>'
+        + '<div class="cstrip">'
+        + keys.map(function(k, ki){
+            return '<button class="cthumb" data-i="' + (start + ki) + '" aria-label="Open '
+              + pr.client + ' frame ' + (ki+1) + '"><img loading="lazy" src="' + IMG[k].src
+              + '" alt=""></button>';
+          }).join('')
+        + '</div></div>';
+    });
+    host.innerHTML = h;
+    host.addEventListener('click', function(e){
+      var b = e.target.closest('.cthumb');
+      if(b) open(+b.dataset.i);
+    });
+
+    var root = document.documentElement,
+        bG = document.getElementById('vGrid'), bC = document.getElementById('vCred');
+    function setView(credits){
+      root.classList.toggle('view-credits', credits);
+      bG.classList.toggle('on', !credits); bC.classList.toggle('on', credits);
+      bG.setAttribute('aria-selected', String(!credits));
+      bC.setAttribute('aria-selected', String(credits));
+      if(location.hash !== (credits ? '#credits' : '')) 
+        history.replaceState(null, '', credits ? '#credits' : location.pathname);
+    }
+    bG.addEventListener('click', function(){ setView(false); });
+    bC.addEventListener('click', function(){ setView(true); });
+    if(location.hash === '#credits') setView(true);
+    if(PROV){
+      var h1 = document.querySelector('header h1');
+      if(h1) h1.insertAdjacentHTML('afterend', '<span class="prov" title="Groupings are placeholders">prov</span>');
+    }
+  })();
 
   /* ---- the A-star as the cursor, everywhere on the page ---- */
   if (matchMedia('(pointer:fine)').matches) (function(){
