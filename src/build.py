@@ -21,7 +21,7 @@ Runs on plain python3; with Pillow (e.g. the project venv) it additionally
 emits WebP renditions and shrinks the inline GL payload. Emission is
 incremental — unchanged sources are skipped via a content-hash stamp.
 """
-import base64, hashlib, io, json, re, pathlib
+import base64, hashlib, io, json, re, pathlib, shutil, subprocess
 
 d = pathlib.Path(__file__).parent
 root = d.parent
@@ -44,10 +44,19 @@ try:
 except ImportError:
     HAVE_PIL = False
 
+# macOS ships sips, and cwebp comes with webp — together they cover everything
+# Pillow does here, so a machine without Pillow still gets responsive images.
+CWEBP = shutil.which("cwebp")
+SIPS = shutil.which("sips")
+HAVE_CLI = bool(CWEBP and SIPS)
+
+def _run(cmd):
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
 dist = root / "dist"
 ASSETS = dist / "assets" / "img"
 ASSETS.mkdir(parents=True, exist_ok=True)
-WIDTHS = (480, 960, 1600)
+WIDTHS = (320, 480, 640, 960, 1600)   # 320/640 exist for phone-sized cells at 1x/2x
 GL_MAX, GL_Q = 1280, 72
 
 stamp_path = dist / "assets" / ".stamp.json"
@@ -89,6 +98,32 @@ for k, v in imgs.items():
             buf = io.BytesIO(); g.save(buf, "JPEG", quality=GL_Q, optimize=True)
             gl_lean[k] = {"uri": "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode(),
                           "w": g.width, "h": g.height}
+    elif HAVE_CLI:
+        srcset = []
+        for w in WIDTHS:
+            rw = min(w, v["w"])
+            wp = ASSETS / f"{k}_{w}.webp"
+            if changed or not wp.exists():
+                _run([CWEBP, "-quiet", "-q", "82", "-resize", str(rw), "0",
+                      str(jpg), "-o", str(wp)])
+            srcset.append(f"assets/img/{k}_{w}.webp {rw}w")
+            if rw >= v["w"]:
+                break
+        entry["srcset"] = ", ".join(srcset)
+        if k == HERO_KEY:
+            gl_lean[k] = {"uri": v["uri"], "w": v["w"], "h": v["h"]}
+        elif v["w"] <= GL_MAX:
+            # already texture-sized — re-encoding through sips only inflates it
+            gl_lean[k] = {"uri": v["uri"], "w": v["w"], "h": v["h"]}
+        else:
+            gw = GL_MAX
+            gh = max(1, round(v["h"] * gw / v["w"]))
+            tmp = ASSETS / f".gl_{k}.jpg"
+            if changed or not tmp.exists():
+                _run([SIPS, "-Z", str(GL_MAX), "--setProperty", "format", "jpeg",
+                      "--setProperty", "formatOptions", str(GL_Q), str(jpg), "--out", str(tmp)])
+            gl_lean[k] = {"uri": "data:image/jpeg;base64," + base64.b64encode(tmp.read_bytes()).decode(),
+                          "w": gw, "h": gh}
     else:
         gl_lean[k] = {"uri": v["uri"], "w": v["w"], "h": v["h"]}
     files[k] = entry
@@ -109,7 +144,8 @@ if HAVE_PIL:
         im.crop((x, y, x + tw, y + th)).save(og_path, "JPEG", quality=84, optimize=True)
         print("assets: og.jpg (1200x630 share card)")
 print(f"assets: {len(imgs)} images -> dist/assets/img "
-      f"({asset_bytes/1024/1024:.1f} MB jpg{' + webp renditions' if HAVE_PIL else ', no Pillow: webp skipped'})")
+      f"({asset_bytes/1024/1024:.1f} MB jpg"
+      f"{' + webp (Pillow)' if HAVE_PIL else ' + webp (cwebp/sips)' if HAVE_CLI else ', no resizer: webp skipped'})")
 
 FILL = {
     "__IMGDATA__": json.dumps(gl_lean),
